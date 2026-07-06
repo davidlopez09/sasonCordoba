@@ -25,10 +25,12 @@
     <!-- Navbar -->
     <nav id="navbar" class="navbar">
         <div class="nav-container">
-            <a href="#" class="logo">
-                <span class="logo-accent">Sazón</span>Córdoba
+            <a href="#home" class="logo">
+                <img src="images/logosason.jpg" alt="Sazón Córdoba" class="brand-logo">
             </a>
             <ul class="nav-links">
+                <li><a href="#home">Inicio</a></li>
+                <li><a href="#identity">Identidad</a></li>
                 <li><a href="#about">El Evento</a></li>
                 <li><a href="#chefs">Invitados</a></li>
                 <li><a href="#dishes">Platillos</a></li>
@@ -44,6 +46,11 @@
 
     <!-- Hero Section -->
     <header class="hero" id="home">
+        <div class="hero-slider">
+            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80')"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1414235077428-338988692140?w=1920&q=80')"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80')"></div>
+        </div>
         <div class="hero-overlay"></div>
         <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
             <div class="badge">Edición 2026</div>
@@ -72,6 +79,24 @@
             </div>
         </div>
     </header>
+
+    <!-- Identity Section -->
+    <section id="identity" class="section section-dark">
+        <div class="container text-center">
+            <h2 class="section-title" data-aos="fade-up">El sabor de nuestra tierra ahora tiene <span class="text-gradient">identidad propia 🔥🍲</span></h2>
+            <p class="section-desc" data-aos="fade-up" data-aos-delay="100" style="max-width: 800px; margin: 0 auto 40px auto; font-size: 1.2rem;">
+                Celebramos que Sazón Córdoba es oficialmente una marca registrada, un sello que reconoce, protege y proyecta lo mejor de nuestra gastronomía.<br><br>
+                No es solo un nombre… es una apuesta por el talento local, por nuestros restaurantes, cocineros y emprendedores que día a día le ponen alma a cada plato.
+            </p>
+            
+            <div class="identity-features" data-aos="zoom-in" data-aos-delay="200" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Negocios gastronómicos</div>
+                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Formación y profesionalización</div>
+                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Eventos y turismo</div>
+                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Crecimiento empresarial</div>
+            </div>
+        </div>
+    </section>
 
     <!-- About Section -->
     <section id="about" class="section">
@@ -259,12 +284,13 @@
             <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Haciendo posible el mejor evento de la ciudad.</p>
             
             <div class="sponsors-grid" data-aos="zoom-in" data-aos-delay="200">
-                <!-- Using placeholder geometric/abstract images for sponsors as requested -->
-                <div class="sponsor-logo">
-                    <h3 style="color: white; font-family: 'Outfit';">Cámara de Comercio</h3>
-                    <p style="color: #ffb703; font-size: 0.8rem;">de Montería</p>
+                <!-- Patrocinadores Reales y Placeholders -->
+                <div class="sponsor-logo" style="border: none; background: transparent;">
+                    <img src="images/logocaramadecomercio.png" alt="Cámara de Comercio de Montería" style="max-height: 120px;">
                 </div>
-                <div class="sponsor-logo"><img src="https://via.placeholder.com/150x80/222/FFF?text=Marca+Aliada+1" alt="Sponsor 1"></div>
+                <div class="sponsor-logo" style="border: none; background: transparent;">
+                    <img src="images/logosason.jpg" alt="Sazón Córdoba" style="max-height: 120px; border-radius: 10px;">
+                </div>
                 <div class="sponsor-logo"><img src="https://via.placeholder.com/150x80/222/FFF?text=Banco+Local" alt="Sponsor 2"></div>
                 <div class="sponsor-logo"><img src="https://via.placeholder.com/150x80/222/FFF?text=Hotel+Monter%C3%ADa" alt="Sponsor 3"></div>
             </div>
@@ -275,8 +301,8 @@
     <footer class="footer">
         <div class="container footer-container">
             <div class="footer-brand">
-                <a href="#" class="logo">
-                    <span class="logo-accent">Sazón</span>Córdoba
+                <a href="#home" class="logo">
+                    <img src="images/logosason.jpg" alt="Sazón Córdoba" style="max-height: 50px; border-radius: 5px;">
                 </a>
                 <p>Una experiencia gastronómica sin igual en el corazón de Montería.</p>
                 <div class="footer-socials">
