@@ -28,15 +28,9 @@
             <a href="#home" class="logo">
                 <img src="images/logosason.jpg" alt="Sazón Córdoba" class="brand-logo">
             </a>
-            <ul class="nav-links">
-                <li><a href="#home">Inicio</a></li>
-                <li><a href="#identity">Identidad</a></li>
-                <li><a href="#about">El Evento</a></li>
-                <li><a href="#chefs">Invitados</a></li>
-                <li><a href="#dishes">Platillos</a></li>
-                <li><a href="#itinerary">Itinerario</a></li>
-            </ul>
-            <a href="#itinerary" class="btn btn-primary">Reservar Ahora</a>
+            <ul class="nav-links" id="nav-links"></ul>
+            <a href="#itinerary" class="btn btn-primary" id="btn-reservar">Reservar Ahora</a>
+            <a href="api/admin/login.php" class="btn btn-outline" style="font-size:0.85rem; padding:8px 18px;">Ingresar</a>
             
             <button class="mobile-menu-btn" aria-label="Abrir menú">
                 <i class="ph ph-list"></i>
@@ -46,55 +40,29 @@
 
     <!-- Hero Section -->
     <header class="hero" id="home">
-        <div class="hero-slider">
-            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80')"></div>
-            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1414235077428-338988692140?w=1920&q=80')"></div>
-            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80')"></div>
-        </div>
+        <div class="hero-slider" id="hero-slider"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
-            <div class="badge">Edición 2026</div>
-            <h1 class="hero-title">El Sabor que <br><span class="text-gradient">Enciende</span> a Montería</h1>
-            <p class="hero-subtitle">Únete al evento culinario más prestigioso de la región, organizado por la Cámara de Comercio de Montería. Descubre texturas, aromas y los mejores chefs del país.</p>
+            <div class="badge" id="hero-badge">Edición 2026</div>
+            <h1 class="hero-title" id="hero-title">El Sabor que <br><span class="text-gradient">Enciende</span> a Montería</h1>
+            <p class="hero-subtitle" id="hero-subtitle">Únete al evento culinario más prestigioso de la región, organizado por la Cámara de Comercio de Montería. Descubre texturas, aromas y los mejores chefs del país.</p>
             <div class="hero-actions">
                 <a href="#itinerary" class="btn btn-primary btn-large">Ver Menú</a>
-                <a href="#about" class="btn btn-outline btn-large">
+                <a href="#about" class="btn btn-outline btn-large hero-btn">
                     <i class="ph ph-play-circle"></i> Descubre Más
                 </a>
             </div>
             
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <h3 class="stat-number">15+</h3>
-                    <p class="stat-label">Chefs Invitados</p>
-                </div>
-                <div class="stat-item">
-                    <h3 class="stat-number">40+</h3>
-                    <p class="stat-label">Platillos Únicos</p>
-                </div>
-                <div class="stat-item">
-                    <h3 class="stat-number">3</h3>
-                    <p class="stat-label">Días de Sabor</p>
-                </div>
-            </div>
+            <div class="hero-stats" id="hero-stats"></div>
         </div>
     </header>
 
     <!-- Identity Section -->
     <section id="identity" class="section section-dark">
         <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up">El sabor de nuestra tierra ahora tiene <span class="text-gradient">identidad propia 🔥🍲</span></h2>
-            <p class="section-desc" data-aos="fade-up" data-aos-delay="100" style="max-width: 800px; margin: 0 auto 40px auto; font-size: 1.2rem;">
-                Celebramos que Sazón Córdoba es oficialmente una marca registrada, un sello que reconoce, protege y proyecta lo mejor de nuestra gastronomía.<br><br>
-                No es solo un nombre… es una apuesta por el talento local, por nuestros restaurantes, cocineros y emprendedores que día a día le ponen alma a cada plato.
-            </p>
-            
-            <div class="identity-features" data-aos="zoom-in" data-aos-delay="200" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
-                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Negocios gastronómicos</div>
-                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Formación y profesionalización</div>
-                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Eventos y turismo</div>
-                <div class="badge" style="font-size: 1rem; padding: 10px 20px;">✨ Crecimiento empresarial</div>
-            </div>
+            <h2 class="section-title" data-aos="fade-up" id="identity-title"></h2>
+            <div class="section-desc" data-aos="fade-up" data-aos-delay="100" style="max-width: 800px; margin: 0 auto 40px auto; font-size: 1.2rem;" id="identity-desc"></div>
+            <div class="identity-features" data-aos="zoom-in" data-aos-delay="200" id="identity-badges"></div>
         </div>
     </section>
 
@@ -102,32 +70,16 @@
     <section id="about" class="section">
         <div class="container about-container">
             <div class="about-image-wrapper" data-aos="fade-right">
-                <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80" alt="Comida deliciosa Sazón Córdoba" class="about-img about-img-main">
+                <img src="" alt="Sazón Córdoba" class="about-img about-img-main" id="about-img">
                 <div class="about-img-badge">
                     <i class="ph ph-star-fill"></i>
                     <span>Experiencia Premium</span>
                 </div>
             </div>
             <div class="about-content" data-aos="fade-left">
-                <h2 class="section-title">Una Experiencia <span class="text-gradient">Inolvidable</span></h2>
-                <p class="section-desc">Sazón Córdoba es más que una feria gastronómica; es un tributo a nuestras raíces y una ventana a la cocina vanguardista. Durante tres días, el paladar será el protagonista en un ambiente sofisticado, lleno de innovación y tradición.</p>
-                
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon"><i class="ph ph-cooking-pot"></i></div>
-                        <div>
-                            <h4>Alta Cocina</h4>
-                            <p>Degustaciones de platillos de autor preparados en vivo.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon"><i class="ph ph-martini"></i></div>
-                        <div>
-                            <h4>Maridaje Perfecto</h4>
-                            <p>Bebidas y licores seleccionados por sommeliers expertos.</p>
-                        </div>
-                    </div>
-                </div>
+                <h2 class="section-title" id="about-title">Una Experiencia <span class="text-gradient">Inolvidable</span></h2>
+                <p class="section-desc" id="about-desc">Sazón Córdoba es más que una feria gastronómica; es un tributo a nuestras raíces.</p>
+                <div class="features" id="about-features"></div>
             </div>
         </div>
     </section>
@@ -135,94 +87,20 @@
     <!-- Chefs Section -->
     <section id="chefs" class="section section-dark">
         <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up">Exponentes <span class="text-gradient">Especiales</span></h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Los maestros culinarios que darán vida a los sabores más intensos de la noche.</p>
+            <h2 class="section-title" data-aos="fade-up" id="chefs-title">Exponentes <span class="text-gradient">Especiales</span></h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="chefs-subtitle"></p>
             
-            <div class="chefs-grid">
-                <!-- Chef 1 -->
-                <div class="chef-card" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="chef-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&q=80" alt="Chef Invitado">
-                        <div class="chef-socials">
-                            <a href="#"><i class="ph ph-instagram-logo"></i></a>
-                            <a href="#"><i class="ph ph-twitter-logo"></i></a>
-                        </div>
-                    </div>
-                    <div class="chef-info">
-                        <h3>Roberto Salgado</h3>
-                        <p>Especialista en Asados</p>
-                    </div>
-                </div>
-
-                <!-- Chef 2 -->
-                <div class="chef-card" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="chef-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=600&q=80" alt="Chef Invitada">
-                        <div class="chef-socials">
-                            <a href="#"><i class="ph ph-instagram-logo"></i></a>
-                            <a href="#"><i class="ph ph-twitter-logo"></i></a>
-                        </div>
-                    </div>
-                    <div class="chef-info">
-                        <h3>Camila Vargas</h3>
-                        <p>Fusión Contemporánea</p>
-                    </div>
-                </div>
-
-                <!-- Chef 3 -->
-                <div class="chef-card" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="chef-img-wrapper">
-                        <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=600&q=80" alt="Chef Invitado">
-                        <div class="chef-socials">
-                            <a href="#"><i class="ph ph-instagram-logo"></i></a>
-                            <a href="#"><i class="ph ph-twitter-logo"></i></a>
-                        </div>
-                    </div>
-                    <div class="chef-info">
-                        <h3>Diego Montes</h3>
-                        <p>Cocina de Autor</p>
-                    </div>
-                </div>
-            </div>
+            <div class="chefs-grid" id="chefs-grid"></div>
         </div>
     </section>
 
     <!-- Dishes Gallery Section -->
     <section id="dishes" class="section">
         <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up">Platillos <span class="text-gradient">Destacados</span></h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Una mirada a las delicias que te esperan. Prepárate para enamorar tu paladar.</p>
+            <h2 class="section-title" data-aos="fade-up" id="dishes-title">Platillos <span class="text-gradient">Destacados</span></h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="dishes-subtitle"></p>
             
-            <div class="dishes-gallery">
-                <div class="dish-item" data-aos="fade-up" data-aos-delay="100">
-                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80" alt="Platillo 1">
-                    <div class="dish-overlay">
-                        <h4>Costillas al Ahumador</h4>
-                        <p>Salsa BBQ artesanal y especias secretas.</p>
-                    </div>
-                </div>
-                <div class="dish-item" data-aos="fade-up" data-aos-delay="200">
-                    <img src="https://images.unsplash.com/photo-1560684352-8497838a2229?w=600&q=80" alt="Platillo 2">
-                    <div class="dish-overlay">
-                        <h4>Risotto de Mariscos</h4>
-                        <p>Mariscos frescos y azafrán importado.</p>
-                    </div>
-                </div>
-                <div class="dish-item" data-aos="fade-up" data-aos-delay="300">
-                    <img src="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&q=80" alt="Platillo 3">
-                    <div class="dish-overlay">
-                        <h4>Pasta Trufada</h4>
-                        <p>Pasta artesanal con crema de trufa negra.</p>
-                    </div>
-                </div>
-                <div class="dish-item" data-aos="fade-up" data-aos-delay="400">
-                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Platillo 4">
-                    <div class="dish-overlay">
-                        <h4>Pizza Gourmet</h4>
-                        <p>Masa madre, prosciutto y rúcula fresca.</p>
-                    </div>
-                </div>
-            </div>
+            <div class="dishes-gallery" id="dishes-gallery"></div>
         </div>
     </section>
 
@@ -230,50 +108,23 @@
     <section id="itinerary" class="section section-dark">
         <div class="container">
             <div class="text-center">
-                <h2 class="section-title" data-aos="fade-up">Itinerario y <span class="text-gradient">Menú</span></h2>
-                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Planifica tu visita y no te pierdas ninguna degustación.</p>
+                <h2 class="section-title" data-aos="fade-up" id="itinerary-title">Itinerario y <span class="text-gradient">Menú</span></h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="itinerary-subtitle"></p>
             </div>
 
-            <div class="timeline">
-                <!-- Timeline Item 1 -->
-                <div class="timeline-item" data-aos="fade-up">
-                    <div class="timeline-time">
-                        <span class="time">12:00 PM</span>
-                        <span class="day">Sábado</span>
-                    </div>
-                    <div class="timeline-content">
-                        <h3 class="timeline-title">Apertura y Aperitivos</h3>
-                        <p class="timeline-chef">Por: <strong>Chef Diego Montes</strong></p>
-                        <p class="timeline-desc">Inauguración del evento con una selección de tapas frías, quesos madurados y maridaje con vinos blancos.</p>
-                    </div>
-                </div>
+            <div class="timeline" id="timeline"></div>
+        </div>
+    </section>
 
-                <!-- Timeline Item 2 -->
-                <div class="timeline-item" data-aos="fade-up">
-                    <div class="timeline-time">
-                        <span class="time">03:30 PM</span>
-                        <span class="day">Sábado</span>
-                    </div>
-                    <div class="timeline-content">
-                        <h3 class="timeline-title">Show Cooking: Carnes y Fuego</h3>
-                        <p class="timeline-chef">Por: <strong>Chef Roberto Salgado</strong></p>
-                        <p class="timeline-desc">Demostración en vivo de técnicas de asado y ahumado. Degustación de cortes premium y costillas a la parrilla.</p>
-                    </div>
-                </div>
-
-                <!-- Timeline Item 3 -->
-                <div class="timeline-item" data-aos="fade-up">
-                    <div class="timeline-time">
-                        <span class="time">07:00 PM</span>
-                        <span class="day">Sábado</span>
-                    </div>
-                    <div class="timeline-content">
-                        <h3 class="timeline-title">Cena de Gala y Fusión</h3>
-                        <p class="timeline-chef">Por: <strong>Chef Camila Vargas</strong></p>
-                        <p class="timeline-desc">Un recorrido de 3 tiempos destacando ingredientes locales mezclados con técnicas asiáticas.</p>
-                    </div>
-                </div>
+    <!-- FAQ Section -->
+    <section id="faq" class="section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title" data-aos="fade-up" id="faq-title">Preguntas <span class="text-gradient">Frecuentes</span></h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="faq-subtitle"></p>
             </div>
+            
+            <div class="faq-container" data-aos="fade-up" data-aos-delay="200" id="faq-container"></div>
         </div>
     </section>
 
@@ -283,56 +134,15 @@
             <h2 class="section-title" data-aos="fade-up">Nuestros <span class="text-gradient">Patrocinadores</span></h2>
             <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Haciendo posible el mejor evento de la ciudad.</p>
             
-            <div class="sponsors-grid" data-aos="zoom-in" data-aos-delay="200">
-                <!-- Patrocinadores Reales y Placeholders -->
-                <div class="sponsor-logo" style="border: none; background: transparent;">
-                    <img src="images/logocaramadecomercio.png" alt="Cámara de Comercio de Montería" style="max-height: 120px;">
-                </div>
-                <div class="sponsor-logo" style="border: none; background: transparent;">
-                    <img src="images/logosason.jpg" alt="Sazón Córdoba" style="max-height: 120px; border-radius: 10px;">
-                </div>
-                <div class="sponsor-logo"><img src="https://via.placeholder.com/150x80/222/FFF?text=Banco+Local" alt="Sponsor 2"></div>
-                <div class="sponsor-logo"><img src="https://via.placeholder.com/150x80/222/FFF?text=Hotel+Monter%C3%ADa" alt="Sponsor 3"></div>
-            </div>
+            <div class="sponsors-grid" id="sponsors-grid" data-aos="zoom-in" data-aos-delay="200"></div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container footer-container">
-            <div class="footer-brand">
-                <a href="#home" class="logo">
-                    <img src="images/logosason.jpg" alt="Sazón Córdoba" style="max-height: 50px; border-radius: 5px;">
-                </a>
-                <p>Una experiencia gastronómica sin igual en el corazón de Montería.</p>
-                <div class="footer-socials">
-                    <a href="#"><i class="ph ph-facebook-logo"></i></a>
-                    <a href="#"><i class="ph ph-instagram-logo"></i></a>
-                    <a href="#"><i class="ph ph-youtube-logo"></i></a>
-                </div>
-            </div>
-            
-            <div class="footer-links">
-                <h3>Enlaces Rápidos</h3>
-                <ul>
-                    <li><a href="#about">Acerca de</a></li>
-                    <li><a href="#chefs">Invitados</a></li>
-                    <li><a href="#dishes">Platillos</a></li>
-                    <li><a href="#itinerary">Agenda</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-contact">
-                <h3>Contacto</h3>
-                <ul>
-                    <li><i class="ph ph-map-pin"></i> Centro de Eventos, Montería</li>
-                    <li><i class="ph ph-envelope-simple"></i> info@sazoncordoba.com</li>
-                    <li><i class="ph ph-phone"></i> +57 300 123 4567</li>
-                </ul>
-            </div>
-        </div>
+        <div class="container footer-container" id="footer-container"></div>
         <div class="footer-bottom">
-            <p>&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.</p>
+            <p id="footer-copyright"></p>
         </div>
     </footer>
 
