@@ -197,9 +197,14 @@ CREATE TABLE IF NOT EXISTS public.menu_navegacion (
     enlace VARCHAR(255) NOT NULL,
     orden INTEGER DEFAULT 0,
     activo BOOLEAN DEFAULT true,
+    color VARCHAR(7) NOT NULL DEFAULT '#ffffff',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde la tabla se creó sin la columna `color`
+ALTER TABLE public.menu_navegacion
+    ADD COLUMN IF NOT EXISTS color VARCHAR(7) NOT NULL DEFAULT '#ffffff';
 
 -- 14. TABLA: Preguntas Frecuentes
 CREATE TABLE IF NOT EXISTS public.preguntas_frecuentes (
@@ -248,13 +253,13 @@ INSERT INTO public.badges_identidad (texto, orden) VALUES
 ('Crecimiento empresarial', 3)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.menu_navegacion (etiqueta, enlace, orden, activo) VALUES
-('Inicio', '#home', 0, true),
-('Identidad', '#identity', 1, true),
-('El Evento', '#about', 2, true),
-('Invitados', '#chefs', 3, true),
-('Platillos', '#dishes', 4, true),
-('Itinerario', '#itinerary', 5, true)
+INSERT INTO public.menu_navegacion (etiqueta, enlace, orden, activo, color) VALUES
+('Inicio', '#home', 0, true, '#ffffff'),
+('Identidad', '#identity', 1, true, '#ffffff'),
+('El Evento', '#about', 2, true, '#ffffff'),
+('Invitados', '#chefs', 3, true, '#ffffff'),
+('Platillos', '#dishes', 4, true, '#ffffff'),
+('Itinerario', '#itinerary', 5, true, '#ffffff')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.preguntas_frecuentes (pregunta, respuesta, orden, activo) VALUES
