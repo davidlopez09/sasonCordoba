@@ -18,6 +18,7 @@ async function loadSiteData() {
         AOS.refresh();
     } catch (e) {
         console.warn('API no disponible:', e);
+        document.querySelector('.brand-logo')?.classList.add('loaded');
     }
 }
 
@@ -36,8 +37,9 @@ function renderNav(menu, config) {
     }
 
     const navLogo = document.querySelector('.brand-logo');
-    if (navLogo && config?.logo_nav) {
-        navLogo.src = config.logo_nav;
+    if (navLogo) {
+        if (config?.logo_nav) navLogo.src = config.logo_nav;
+        navLogo.classList.add('loaded');
     }
 }
 

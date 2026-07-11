@@ -183,6 +183,12 @@ img {
 .brand-logo {
     max-height: 60px;
     border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.brand-logo.loaded {
+    opacity: 1;
 }
 
 .logo-accent {
