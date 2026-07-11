@@ -460,10 +460,10 @@ $groups = [
         .loader::before { margin: 4px; filter: hue-rotate(45deg); background-size: 8px 8px; animation-timing-function: linear; }
         @keyframes l12 { 100% { transform: rotate(.5turn); } }
 
-        /* SWEETALERT DARK THEME */
-        .swal2-popup { background: #141419 !important; color: #f8f9fa !important; border-radius: 20px !important; border: 1px solid rgba(255,255,255,0.08) !important; }
-        .swal2-title { color: #f8f9fa !important; font-family: 'Outfit', sans-serif !important; }
-        .swal2-html-container { color: #adb5bd !important; }
+        /* SWEETALERT LIGHT THEME */
+        .swal2-popup { background: #ffffff !important; color: #1a1a1a !important; border-radius: 20px !important; border: 1px solid #e9ecef !important; }
+        .swal2-title { color: #1a1a1a !important; font-family: 'Outfit', sans-serif !important; }
+        .swal2-html-container { color: #5a6066 !important; }
         .swal2-icon.swal2-success { border-color: #2ecc71 !important; color: #2ecc71 !important; }
         .swal2-icon.swal2-success [class^=swal2-success-line] { background-color: #2ecc71 !important; }
         .swal2-icon.swal2-success .swal2-success-ring { border-color: rgba(46,204,113,0.3) !important; }
