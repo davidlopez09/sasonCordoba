@@ -11,11 +11,121 @@ $db = getDB();
 
 function jsonResponse($data) { echo json_encode($data, JSON_UNESCAPED_UNICODE); exit; }
 
+function ordenCount(PDO $db, string $table, ?string $groupCol, $groupVal): int {
+    if ($groupCol) {
+        $stmt = $db->prepare("SELECT COUNT(*) FROM $table WHERE $groupCol = ?");
+        $stmt->execute([$groupVal]);
+    } else {
+        $stmt = $db->query("SELECT COUNT(*) FROM $table");
+    }
+    return (int) $stmt->fetchColumn();
+}
+
+function ordenClamp(int $requested, int $min, int $max): int {
+    return max($min, min($max, $requested));
+}
+
+function ordenShiftForInsert(PDO $db, string $table, ?string $groupCol, $groupVal, int $orden): void {
+    if ($groupCol) {
+        $stmt = $db->prepare("UPDATE $table SET orden = orden + 1 WHERE orden >= ? AND $groupCol = ?");
+        $stmt->execute([$orden, $groupVal]);
+    } else {
+        $stmt = $db->prepare("UPDATE $table SET orden = orden + 1 WHERE orden >= ?");
+        $stmt->execute([$orden]);
+    }
+}
+
+function ordenShiftForDelete(PDO $db, string $table, ?string $groupCol, $groupVal, int $orden): void {
+    if ($groupCol) {
+        $stmt = $db->prepare("UPDATE $table SET orden = orden - 1 WHERE orden > ? AND $groupCol = ?");
+        $stmt->execute([$orden, $groupVal]);
+    } else {
+        $stmt = $db->prepare("UPDATE $table SET orden = orden - 1 WHERE orden > ?");
+        $stmt->execute([$orden]);
+    }
+}
+
+function ordenShiftForMove(PDO $db, string $table, ?string $groupCol, $oldGroupVal, $newGroupVal, int $oldOrden, int $newOrden): void {
+    if ($groupCol && $oldGroupVal !== $newGroupVal) {
+        $stmt = $db->prepare("UPDATE $table SET orden = orden - 1 WHERE orden > ? AND $groupCol = ?");
+        $stmt->execute([$oldOrden, $oldGroupVal]);
+        $stmt = $db->prepare("UPDATE $table SET orden = orden + 1 WHERE orden >= ? AND $groupCol = ?");
+        $stmt->execute([$newOrden, $newGroupVal]);
+        return;
+    }
+    if ($newOrden === $oldOrden) return;
+    if ($newOrden < $oldOrden) {
+        $sql = "UPDATE $table SET orden = orden + 1 WHERE orden >= ? AND orden < ?" . ($groupCol ? " AND $groupCol = ?" : "");
+        $params = $groupCol ? [$newOrden, $oldOrden, $newGroupVal] : [$newOrden, $oldOrden];
+    } else {
+        $sql = "UPDATE $table SET orden = orden - 1 WHERE orden > ? AND orden <= ?" . ($groupCol ? " AND $groupCol = ?" : "");
+        $params = $groupCol ? [$oldOrden, $newOrden, $newGroupVal] : [$oldOrden, $newOrden];
+    }
+    $db->prepare($sql)->execute($params);
+}
+
+$orderTables = [
+    'slide' => ['table' => 'banner_principal', 'group' => null],
+    'estadistica' => ['table' => 'estadisticas_principales', 'group' => null],
+    'caracteristica' => ['table' => 'caracteristicas_about', 'group' => null],
+    'exponente' => ['table' => 'exponentes', 'group' => null],
+    'platillo' => ['table' => 'platillos_destacados', 'group' => null],
+    'itinerario' => ['table' => 'itinerario_items', 'group' => null],
+    'patrocinador' => ['table' => 'patrocinadores', 'group' => null],
+    'badges' => ['table' => 'badges_identidad', 'group' => null],
+    'menu_nav' => ['table' => 'menu_navegacion', 'group' => null],
+    'faq' => ['table' => 'preguntas_frecuentes', 'group' => null],
+    'footer' => ['table' => 'pie_pagina', 'group' => 'columna'],
+];
+
 $action = $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
+    $pendingOrdenDelete = null;
     try {
+        foreach ($orderTables as $key => $cfg) {
+            $table = $cfg['table'];
+            $groupCol = $cfg['group'];
+
+            if ($action === "add_$key") {
+                $groupVal = $groupCol ? ($_POST[$groupCol] ?? null) : null;
+                $count = ordenCount($db, $table, $groupCol, $groupVal);
+                $requested = (int) ($_POST['orden'] ?? ($count + 1));
+                $orden = ordenClamp($requested, 1, $count + 1);
+                ordenShiftForInsert($db, $table, $groupCol, $groupVal, $orden);
+                $_POST['orden'] = $orden;
+            } elseif ($action === "edit_$key") {
+                $current = $db->prepare('SELECT orden' . ($groupCol ? ", $groupCol" : '') . " FROM $table WHERE id = ?");
+                $current->execute([$_POST['id'] ?? null]);
+                $row = $current->fetch(PDO::FETCH_ASSOC);
+                if ($row) {
+                    $oldOrden = (int) $row['orden'];
+                    $oldGroupVal = $groupCol ? $row[$groupCol] : null;
+                    $newGroupVal = $groupCol ? ($_POST[$groupCol] ?? $oldGroupVal) : null;
+                    $sameGroup = !$groupCol || $oldGroupVal === $newGroupVal;
+                    $countDestGroup = ordenCount($db, $table, $groupCol, $newGroupVal);
+                    $maxOrden = $sameGroup ? $countDestGroup : $countDestGroup + 1;
+                    $requested = (int) ($_POST['orden'] ?? $oldOrden);
+                    $orden = ordenClamp($requested, 1, max(1, $maxOrden));
+                    ordenShiftForMove($db, $table, $groupCol, $oldGroupVal, $newGroupVal, $oldOrden, $orden);
+                    $_POST['orden'] = $orden;
+                }
+            } elseif ($action === "delete_$key") {
+                $current = $db->prepare('SELECT orden' . ($groupCol ? ", $groupCol" : '') . " FROM $table WHERE id = ?");
+                $current->execute([$_POST['id'] ?? null]);
+                $row = $current->fetch(PDO::FETCH_ASSOC);
+                if ($row) {
+                    $pendingOrdenDelete = [
+                        'table' => $table,
+                        'group' => $groupCol,
+                        'groupVal' => $groupCol ? $row[$groupCol] : null,
+                        'orden' => (int) $row['orden'],
+                    ];
+                }
+            }
+        }
+
         if ($action === 'add_nav' || $action === 'edit_nav') {
             $logoUrl = null;
 
@@ -128,6 +238,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
             $vals = array_map(fn($p) => $_POST[$p] ?? null, $params);
             $stmt = $db->prepare($sql);
             $stmt->execute($vals);
+            if ($pendingOrdenDelete) {
+                ordenShiftForDelete($db, $pendingOrdenDelete['table'], $pendingOrdenDelete['group'], $pendingOrdenDelete['groupVal'], $pendingOrdenDelete['orden']);
+            }
             jsonResponse(['ok' => true]);
         }
         jsonResponse(['error' => 'Acción no válida']);
@@ -776,7 +889,10 @@ function openModal(section, mode, data = null) {
     const container = document.getElementById('formFields');
     container.innerHTML = '';
     (fieldConfig[section] || []).forEach(f => {
-        const val = data ? (data[f.name] ?? '') : '';
+        let val = data ? (data[f.name] ?? '') : '';
+        if (!data && f.name === 'orden') {
+            val = document.querySelectorAll('#page-' + section + ' tbody tr').length + 1;
+        }
         const div = document.createElement('div');
         div.className = 'form-group';
         div.innerHTML = `<label>${f.label}</label>`;
@@ -813,13 +929,15 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
         const data = await res.json();
         hideLoader();
         if (data.ok) {
-            if (currentSection === 'configuraciones') {
+            const section = currentSection;
+            if (section === 'configuraciones') {
                 await Swal.fire({ icon:'success', title:'Guardado', text:'Configuración actualizada.', timer:1500, showConfirmButton:false });
                 closeModal();
+                refreshSection(section);
             } else {
                 await Swal.fire({ icon:'success', title:'Éxito', text:'Guardado correctamente.', timer:1500, showConfirmButton:false });
                 closeModal();
-                setTimeout(() => location.reload(), 500);
+                refreshSection(section);
             }
         } else {
             Swal.fire({ icon:'error', title:'Error', text:data.error || 'Ocurrió un error.' });
@@ -852,7 +970,7 @@ async function deleteItem(section, id) {
         hideLoader();
         if (data.ok) {
             await Swal.fire({ icon:'success', title:'Eliminado', text:'Registro eliminado.', timer:1500, showConfirmButton:false });
-            setTimeout(() => location.reload(), 500);
+            refreshSection(section);
         } else {
             Swal.fire({ icon:'error', title:'Error', text:data.error || 'Ocurrió un error.' });
         }
@@ -873,13 +991,31 @@ async function activarLogo(id) {
         hideLoader();
         if (data.ok) {
             await Swal.fire({ icon:'success', title:'Activado', text:'Logo activado.', timer:1500, showConfirmButton:false });
-            setTimeout(() => location.reload(), 500);
+            refreshSection('nav');
         } else {
             Swal.fire({ icon:'error', title:'Error', text:data.error || 'Ocurrió un error.' });
         }
     } catch(e) {
         hideLoader();
         Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo completar la operación.' });
+    }
+}
+
+async function refreshSection(section) {
+    try {
+        const res = await fetch(window.location.href, { credentials: 'same-origin' });
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        const freshPage = doc.getElementById('page-' + section);
+        const currentPage = document.getElementById('page-' + section);
+        if (freshPage && currentPage) currentPage.innerHTML = freshPage.innerHTML;
+
+        const freshBadge = doc.querySelector(`.nav-item[data-group="${currentGroup}"] .count-badge`);
+        const currentBadge = document.querySelector(`.nav-item[data-group="${currentGroup}"] .count-badge`);
+        if (freshBadge && currentBadge) currentBadge.textContent = freshBadge.textContent;
+    } catch (e) {
+        location.reload();
     }
 }
 
