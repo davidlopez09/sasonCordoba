@@ -16,8 +16,8 @@ $action = $_GET['action'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
     try {
-        if ($action === 'save_logo_nav') {
-            $updates = [];
+        if ($action === 'add_nav' || $action === 'edit_nav') {
+            $logoUrl = null;
 
             if (!empty($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
                 $file = $_FILES['logo'];
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 }
                 $filename = 'nav_logo_' . bin2hex(random_bytes(6)) . '.' . $ext;
                 try {
-                    $updates['logo_nav'] = uploadToSupabaseStorage('logo_nav', $filename, $file['tmp_name'], $allowed[$ext]);
+                    $logoUrl = uploadToSupabaseStorage('logo_nav', $filename, $file['tmp_name'], $allowed[$ext]);
                 } catch (Exception $e) {
                     jsonResponse(['error' => 'No se pudo subir el archivo: ' . $e->getMessage()]);
                 }
@@ -43,17 +43,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                 jsonResponse(['error' => 'Error al subir el archivo']);
             }
 
-            if (!empty($_POST['color_texto'])) {
-                if (!preg_match('/^#[0-9a-fA-F]{6}$/', $_POST['color_texto'])) {
-                    jsonResponse(['error' => 'Color inválido']);
+            if ($action === 'add_nav') {
+                if (!$logoUrl) {
+                    jsonResponse(['error' => 'Debés subir una imagen']);
                 }
-                $updates['color_nav_texto'] = $_POST['color_texto'];
+                $stmt = $db->prepare('INSERT INTO logos_nav (logo, activo) VALUES (?, false)');
+                $stmt->execute([$logoUrl]);
+            } else {
+                if ($logoUrl) {
+                    $stmt = $db->prepare('UPDATE logos_nav SET logo = ? WHERE id = ?');
+                    $stmt->execute([$logoUrl, $_POST['id']]);
+                }
             }
+            jsonResponse(['ok' => true]);
+        }
 
-            foreach ($updates as $clave => $valor) {
-                $stmt = $db->prepare("UPDATE configuraciones_sitio SET valor = ? WHERE clave = ?");
-                $stmt->execute([$valor, $clave]);
+        if ($action === 'delete_nav') {
+            $activo = $db->prepare('SELECT activo FROM logos_nav WHERE id = ?');
+            $activo->execute([$_POST['id']]);
+            if ($activo->fetchColumn()) {
+                jsonResponse(['error' => 'No podés eliminar el logo activo. Activá otro primero.']);
             }
+            $stmt = $db->prepare('DELETE FROM logos_nav WHERE id = ?');
+            $stmt->execute([$_POST['id']]);
+            jsonResponse(['ok' => true]);
+        }
+
+        if ($action === 'activar_nav') {
+            $db->exec('UPDATE logos_nav SET activo = false');
+            $stmt = $db->prepare('UPDATE logos_nav SET activo = true WHERE id = ?');
+            $stmt->execute([$_POST['id']]);
             jsonResponse(['ok' => true]);
         }
 
@@ -138,6 +157,7 @@ if (!$identidad) {
     $identidad = $db->query('SELECT * FROM seccion_identidad LIMIT 1')->fetch();
 }
 $badges = $db->query('SELECT * FROM badges_identidad ORDER BY orden')->fetchAll();
+$logos_nav = $db->query('SELECT * FROM logos_nav ORDER BY id')->fetchAll();
 $menu_nav = $db->query('SELECT * FROM menu_navegacion ORDER BY orden')->fetchAll();
 $faq_items = $db->query('SELECT * FROM preguntas_frecuentes ORDER BY orden')->fetchAll();
 $footer_items = $db->query('SELECT * FROM pie_pagina ORDER BY columna, orden')->fetchAll();
@@ -147,7 +167,7 @@ $configMap = [];
 foreach ($configs as $c) { $configMap[$c['clave']] = $c['valor']; }
 
 $sections = [
-    'nav' => ['label' => 'Apariencia del Nav', 'icon' => 'ph-image', 'rows' => [['id' => 1, 'logo' => $configMap['logo_nav'] ?? 'img/logos/logosason.jpg', 'color_texto' => $configMap['color_nav_texto'] ?? '#5a6066']], 'fields' => ['logo', 'color_texto'], 'can_add' => false],
+    'nav' => ['label' => 'Logos del Nav', 'icon' => 'ph-image', 'rows' => $logos_nav, 'fields' => ['logo', 'activo'], 'can_add' => true],
     'slides' => ['label' => 'Hero Slides', 'icon' => 'ph-images', 'rows' => $slides, 'fields' => ['imagen','texto_badge','titulo','subtitulo','activo','orden'], 'can_add' => true],
     'estadisticas' => ['label' => 'Estadísticas', 'icon' => 'ph-chart-bar', 'rows' => $estadisticas, 'fields' => ['numero','etiqueta','icono','orden'], 'can_add' => true],
     'about' => ['label' => 'Sección About', 'icon' => 'ph-info', 'rows' => [$about], 'fields' => ['imagen','titulo','descripcion'], 'can_add' => false],
@@ -543,7 +563,12 @@ $groups = [
                         <?php endforeach; ?>
                         <td class="actions">
                             <button class="btn btn-ghost btn-sm" onclick="openModal('<?= $key ?>','edit',<?= htmlspecialchars(json_encode($row)) ?>)">Editar</button>
-                            <?php if (!in_array($key, ['about','identidad','subtitulos','configuraciones','nav'])): ?>
+                            <?php if ($key === 'nav'): ?>
+                                <?php if (!$row['activo']): ?>
+                                    <button class="btn btn-primary btn-sm" onclick="activarLogo(<?= $row['id'] ?>)">Activar</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteItem('nav',<?= $row['id'] ?>)">Eliminar</button>
+                                <?php endif; ?>
+                            <?php elseif (!in_array($key, ['about','identidad','subtitulos','configuraciones'])): ?>
                                 <button class="btn btn-danger btn-sm" onclick="deleteItem('<?= $key ?>',<?= $row['id'] ?>)">Eliminar</button>
                             <?php endif; ?>
                         </td>
@@ -576,7 +601,6 @@ $groups = [
 const fieldConfig = {
     nav: [
         {name:'logo', label:'Logo (imagen)', type:'file'},
-        {name:'color_texto', label:'Color del texto del menú', type:'color'},
     ],
     slides: [
         {name:'imagen', label:'URL Imagen', type:'url'},
@@ -674,7 +698,7 @@ const fieldConfig = {
 };
 
 const pageTitles = {
-    nav: 'Logo del Nav', slides: 'Hero Slides', estadisticas: 'Estadísticas del Hero', about: 'Sección About',
+    nav: 'Logos del Nav', slides: 'Hero Slides', estadisticas: 'Estadísticas del Hero', about: 'Sección About',
     caracteristicas: 'Características About', exponentes: 'Exponentes (Chefs)',
     platillos: 'Platillos Destacados', itinerario: 'Itinerario', patrocinadores: 'Patrocinadores',
     identidad: 'Sección Identidad', badges: 'Badges Identidad', menu_nav: 'Menú Navegación',
@@ -683,7 +707,7 @@ const pageTitles = {
 };
 
 const canAdd = {
-    nav:false, slides:true, estadisticas:true, about:false, caracteristicas:true,
+    nav:true, slides:true, estadisticas:true, about:false, caracteristicas:true,
     exponentes:true, platillos:true, itinerario:true, patrocinadores:true,
     identidad:false, badges:true, menu_nav:true, faq:true, footer:true,
     subtitulos:false, configuraciones:false
@@ -761,7 +785,10 @@ function openModal(section, mode, data = null) {
         } else if (f.type === 'select') {
             div.innerHTML += `<select name="${f.name}">${f.options.map(o => `<option value="${o.v}"${val == o.v ? ' selected' : ''}>${o.l}</option>`).join('')}</select>`;
         } else if (f.type === 'file') {
-            if (val) div.innerHTML += `<img src="../../${val}" class="img-preview" style="display:block; margin-bottom:8px;">`;
+            if (val) {
+                const previewSrc = /^https?:\/\//.test(val) ? val : `../../${val}`;
+                div.innerHTML += `<img src="${previewSrc}" class="img-preview" style="display:block; margin-bottom:8px;">`;
+            }
             div.innerHTML += `<input type="file" name="${f.name}" accept="image/*">`;
         } else if (section === 'configuraciones' && f.name === 'valor' && data?.clave === 'color_nav_texto') {
             div.innerHTML += `<input type="color" name="${f.name}" value="${val || '#5a6066'}">`;
@@ -779,7 +806,7 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
     e.preventDefault();
     showLoader();
     const formData = new FormData(this);
-    const saveActions = { about:'save_about', identidad:'save_identidad', subtitulos:'save_subtitulo', configuraciones:'save_config', nav:'save_logo_nav' };
+    const saveActions = { about:'save_about', identidad:'save_identidad', subtitulos:'save_subtitulo', configuraciones:'save_config' };
     formData.set('action', currentMode === 'add' ? 'add_' + currentSection : (saveActions[currentSection] || 'edit_' + currentSection));
     try {
         const res = await fetch('?action=' + formData.get('action'), { method:'POST', body: formData });
@@ -825,6 +852,27 @@ async function deleteItem(section, id) {
         hideLoader();
         if (data.ok) {
             await Swal.fire({ icon:'success', title:'Eliminado', text:'Registro eliminado.', timer:1500, showConfirmButton:false });
+            setTimeout(() => location.reload(), 500);
+        } else {
+            Swal.fire({ icon:'error', title:'Error', text:data.error || 'Ocurrió un error.' });
+        }
+    } catch(e) {
+        hideLoader();
+        Swal.fire({ icon:'error', title:'Error de conexión', text:'No se pudo completar la operación.' });
+    }
+}
+
+async function activarLogo(id) {
+    showLoader();
+    const fd = new FormData();
+    fd.set('id', id);
+    fd.set('action', 'activar_nav');
+    try {
+        const res = await fetch('?action=activar_nav', { method:'POST', body: fd });
+        const data = await res.json();
+        hideLoader();
+        if (data.ok) {
+            await Swal.fire({ icon:'success', title:'Activado', text:'Logo activado.', timer:1500, showConfirmButton:false });
             setTimeout(() => location.reload(), 500);
         } else {
             Swal.fire({ icon:'error', title:'Error', text:data.error || 'Ocurrió un error.' });

@@ -114,6 +114,12 @@ if ($isSiteRoute) {
         $data['configuraciones'][$row['clave']] = $row['valor'];
     }
 
+    // Logo activo del nav
+    $logoActivo = $db->query('SELECT logo FROM logos_nav WHERE activo = true LIMIT 1')->fetchColumn();
+    if ($logoActivo) {
+        $data['configuraciones']['logo_nav'] = $logoActivo;
+    }
+
     jsonResponse($data);
 }
 

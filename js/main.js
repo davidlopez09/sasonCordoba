@@ -39,10 +39,6 @@ function renderNav(menu, config) {
     if (navLogo && config?.logo_nav) {
         navLogo.src = config.logo_nav;
     }
-
-    if (config?.color_nav_texto) {
-        document.documentElement.style.setProperty('--nav-link-color', config.color_nav_texto);
-    }
 }
 
 function renderHero(hero) {
