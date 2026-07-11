@@ -3,25 +3,25 @@
 -- =============================================
 
 -- 1. TABLA: Usuarios (para el login del panel admin)
-CREATE TABLE IF NOT EXISTS public.users (
+CREATE TABLE IF NOT EXISTS public.usuarios (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    nombre VARCHAR(255) NOT NULL,
+    correo VARCHAR(255) NOT NULL UNIQUE,
     email_verified_at TIMESTAMP(0) WITHOUT TIME ZONE,
-    password VARCHAR(255) NOT NULL,
-    remember_token VARCHAR(100),
+    contrasena VARCHAR(255) NOT NULL,
+    token_recordar VARCHAR(100),
     rol VARCHAR(50) DEFAULT 'user',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
 -- Insertar usuario admin (contraseña: sazon2026)
-INSERT INTO public.users (name, email, password, rol) VALUES
+INSERT INTO public.usuarios (nombre, correo, contrasena, rol) VALUES
 ('Administrador', 'admin@sazoncordoba.com', '$2y$10$e2nQfm7orYPgm2W3n6U9Jusm4eDzKx6sKt0x090Kzl/.1/ktnWK7W', 'admin')
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (correo) DO NOTHING;
 
--- 2. TABLA: Hero Slides
-CREATE TABLE IF NOT EXISTS public.hero_slides (
+-- 2. TABLA: Banner Principal
+CREATE TABLE IF NOT EXISTS public.banner_principal (
     id BIGSERIAL PRIMARY KEY,
     imagen VARCHAR(255) NOT NULL,
     texto_badge VARCHAR(255),
@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS public.hero_slides (
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
--- 3. TABLA: Hero Estadísticas
-CREATE TABLE IF NOT EXISTS public.hero_estadisticas (
+-- 3. TABLA: Estadísticas Principales
+CREATE TABLE IF NOT EXISTS public.estadisticas_principales (
     id BIGSERIAL PRIMARY KEY,
     numero VARCHAR(255) NOT NULL,
     etiqueta VARCHAR(255) NOT NULL,
@@ -126,13 +126,13 @@ CREATE TABLE IF NOT EXISTS public.configuraciones_sitio (
 -- DATOS DE EJEMPLO
 -- =============================================
 
-INSERT INTO public.hero_slides (imagen, texto_badge, titulo, subtitulo, activo, orden) VALUES
+INSERT INTO public.banner_principal (imagen, texto_badge, titulo, subtitulo, activo, orden) VALUES
 ('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80', 'Edición 2026', 'El Sabor que Enciende a Montería', 'Descubre el evento culinario más prestigioso de la región.', true, 0),
 ('https://images.unsplash.com/photo-1414235077428-338988692140?w=1920&q=80', 'Edición 2026', 'Alta Cocina en Vivo', 'Los mejores chefs del país en un solo lugar.', true, 1),
 ('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80', 'Edición 2026', 'Sabores que Enamoran', 'Una experiencia gastronómica inolvidable.', true, 2)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.hero_estadisticas (numero, etiqueta, orden) VALUES
+INSERT INTO public.estadisticas_principales (numero, etiqueta, orden) VALUES
 ('15+', 'Chefs Invitados', 0),
 ('40+', 'Platillos Únicos', 1),
 ('3', 'Días de Sabor', 2)
@@ -167,8 +167,8 @@ INSERT INTO public.itinerario_items (hora, dia, titulo, nombre_chef, descripcion
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.patrocinadores (nombre, logo, orden) VALUES
-('Cámara de Comercio de Montería', 'images/logocaramadecomercio.png', 0),
-('Sazón Córdoba', 'images/logosason.jpg', 1)
+('Cámara de Comercio de Montería', 'img/logos/logocaramadecomercio.png', 0),
+('Sazón Córdoba', 'img/logos/logosason.jpg', 1)
 ON CONFLICT DO NOTHING;
 
 -- 11. TABLA: Sección Identidad
@@ -191,18 +191,18 @@ CREATE TABLE IF NOT EXISTS public.badges_identidad (
 );
 
 -- 13. TABLA: Menú de Navegación
-CREATE TABLE IF NOT EXISTS public.menu_nav (
+CREATE TABLE IF NOT EXISTS public.menu_navegacion (
     id BIGSERIAL PRIMARY KEY,
     etiqueta VARCHAR(255) NOT NULL,
-    href VARCHAR(255) NOT NULL,
+    enlace VARCHAR(255) NOT NULL,
     orden INTEGER DEFAULT 0,
     activo BOOLEAN DEFAULT true,
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
--- 14. TABLA: FAQ
-CREATE TABLE IF NOT EXISTS public.faq_items (
+-- 14. TABLA: Preguntas Frecuentes
+CREATE TABLE IF NOT EXISTS public.preguntas_frecuentes (
     id BIGSERIAL PRIMARY KEY,
     pregunta TEXT NOT NULL,
     respuesta TEXT NOT NULL,
@@ -212,8 +212,8 @@ CREATE TABLE IF NOT EXISTS public.faq_items (
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
--- 15. TABLA: Footer
-CREATE TABLE IF NOT EXISTS public.footer_config (
+-- 15. TABLA: Pie de Página
+CREATE TABLE IF NOT EXISTS public.pie_pagina (
     id BIGSERIAL PRIMARY KEY,
     tipo VARCHAR(50) NOT NULL DEFAULT 'texto',
     titulo VARCHAR(255),
@@ -248,7 +248,7 @@ INSERT INTO public.badges_identidad (texto, orden) VALUES
 ('Crecimiento empresarial', 3)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.menu_nav (etiqueta, href, orden, activo) VALUES
+INSERT INTO public.menu_navegacion (etiqueta, enlace, orden, activo) VALUES
 ('Inicio', '#home', 0, true),
 ('Identidad', '#identity', 1, true),
 ('El Evento', '#about', 2, true),
@@ -257,14 +257,14 @@ INSERT INTO public.menu_nav (etiqueta, href, orden, activo) VALUES
 ('Itinerario', '#itinerary', 5, true)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.faq_items (pregunta, respuesta, orden, activo) VALUES
+INSERT INTO public.preguntas_frecuentes (pregunta, respuesta, orden, activo) VALUES
 ('¿Dónde puedo comprar mis entradas?', 'Las entradas estarán disponibles en las taquillas del evento o pueden adquirirse de forma anticipada a través de la página web de la Cámara de Comercio de Montería y puntos de venta autorizados.', 0, true),
 ('¿El evento es apto para niños?', '¡Por supuesto! Sazón Córdoba es un evento familiar. Contaremos con zonas especiales y platillos pensados para los más pequeños, además de un ambiente seguro y agradable.', 1, true),
 ('¿Habrá opciones vegetarianas o veganas?', 'Sí. Varios de nuestros restaurantes y chefs invitados tendrán opciones vegetarianas, veganas y libres de gluten para garantizar que todos disfruten de la experiencia gastronómica.', 2, true),
 ('¿Cuentan con parqueadero disponible?', 'El centro de eventos dispone de un amplio parqueadero vigilado para los asistentes. Recomendamos llegar con anticipación para asegurar tu lugar o utilizar servicios de transporte.', 3, true)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.footer_config (tipo, titulo, contenido, url, icono, columna, orden) VALUES
+INSERT INTO public.pie_pagina (tipo, titulo, contenido, url, icono, columna, orden) VALUES
 ('texto', 'Sazón Córdoba', 'Una experiencia gastronómica sin igual en el corazón de Montería.', NULL, NULL, '1', 0),
 ('red_social', NULL, NULL, '#', 'ph-facebook-logo', '1', 1),
 ('red_social', NULL, NULL, '#', 'ph-instagram-logo', '1', 2),
@@ -288,5 +288,7 @@ ON CONFLICT (seccion) DO NOTHING;
 INSERT INTO public.configuraciones_sitio (clave, valor) VALUES
 ('reservar_url', '#itinerary'),
 ('reservar_texto', 'Reservar Ahora'),
-('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.')
+('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.'),
+('logo_nav', 'img/logos/logosason.jpg'),
+('color_nav_texto', '#5a6066')
 ON CONFLICT (clave) DO NOTHING;

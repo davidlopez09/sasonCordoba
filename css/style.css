@@ -197,7 +197,7 @@ img {
 .nav-links a {
     font-weight: 500;
     font-size: 1rem;
-    color: var(--text-muted);
+    color: var(--nav-link-color, var(--text-muted));
     position: relative;
 }
 

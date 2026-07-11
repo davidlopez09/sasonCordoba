@@ -7,11 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     $db = getDB();
-    $stmt = $db->prepare("SELECT id, password, rol FROM users WHERE email = ?");
+    $stmt = $db->prepare("SELECT id, contrasena, rol FROM usuarios WHERE correo = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
-    if ($user && password_verify($password, $user['password']) && $user['rol'] === 'admin') {
+    if ($user && password_verify($password, $user['contrasena']) && $user['rol'] === 'admin') {
         $_SESSION['admin'] = true;
         $_SESSION['user_id'] = $user['id'];
         header('Location: index.php');
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="login-card">
-        <img src="../images/logosason.jpg" alt="Sazón Córdoba">
+        <img src="../../img/logos/logosason.jpg" alt="Sazón Córdoba">
         <h1>Panel de Administración</h1>
         <p>Ingresa para gestionar el contenido del sitio</p>
         <?php if (isset($error)): ?>

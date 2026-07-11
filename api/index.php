@@ -46,11 +46,11 @@ if ($isSiteRoute) {
     $data = [];
 
     // Hero slides
-    $stmt = $db->query('SELECT * FROM hero_slides WHERE activo = true ORDER BY orden');
+    $stmt = $db->query('SELECT * FROM banner_principal WHERE activo = true ORDER BY orden');
     $data['hero']['slides'] = $stmt->fetchAll();
 
     // Hero estadisticas
-    $stmt = $db->query('SELECT * FROM hero_estadisticas ORDER BY orden');
+    $stmt = $db->query('SELECT * FROM estadisticas_principales ORDER BY orden');
     $data['hero']['estadisticas'] = $stmt->fetchAll();
 
     // About seccion
@@ -86,15 +86,15 @@ if ($isSiteRoute) {
     $data['identidad']['badges'] = $stmt->fetchAll();
 
     // Menú de navegación
-    $stmt = $db->query('SELECT * FROM menu_nav WHERE activo = true ORDER BY orden');
+    $stmt = $db->query('SELECT * FROM menu_navegacion WHERE activo = true ORDER BY orden');
     $data['menu_nav'] = $stmt->fetchAll();
 
     // FAQ items
-    $stmt = $db->query('SELECT * FROM faq_items WHERE activo = true ORDER BY orden');
+    $stmt = $db->query('SELECT * FROM preguntas_frecuentes WHERE activo = true ORDER BY orden');
     $data['faq'] = $stmt->fetchAll();
 
     // Footer
-    $stmt = $db->query('SELECT * FROM footer_config ORDER BY columna, orden');
+    $stmt = $db->query('SELECT * FROM pie_pagina ORDER BY columna, orden');
     $data['footer'] = $stmt->fetchAll();
 
     // Subtítulos de secciones

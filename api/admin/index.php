@@ -15,13 +15,53 @@ $action = $_GET['action'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
     try {
+        if ($action === 'save_logo_nav') {
+            $updates = [];
+
+            if (!empty($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['logo'];
+                if ($file['size'] > 2 * 1024 * 1024) {
+                    jsonResponse(['error' => 'La imagen no debe superar 2MB']);
+                }
+                $allowed = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'svg' => 'image/svg+xml'];
+                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                if (!isset($allowed[$ext])) {
+                    jsonResponse(['error' => 'Formato no permitido. Usa JPG, PNG, WEBP o SVG']);
+                }
+                $mime = mime_content_type($file['tmp_name']);
+                if ($ext !== 'svg' && $mime !== $allowed[$ext]) {
+                    jsonResponse(['error' => 'El archivo no es una imagen válida']);
+                }
+                $filename = 'nav_logo_' . bin2hex(random_bytes(6)) . '.' . $ext;
+                if (!move_uploaded_file($file['tmp_name'], __DIR__ . '/../../img/logos/' . $filename)) {
+                    jsonResponse(['error' => 'No se pudo guardar el archivo']);
+                }
+                $updates['logo_nav'] = 'img/logos/' . $filename;
+            } elseif (!empty($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
+                jsonResponse(['error' => 'Error al subir el archivo']);
+            }
+
+            if (!empty($_POST['color_texto'])) {
+                if (!preg_match('/^#[0-9a-fA-F]{6}$/', $_POST['color_texto'])) {
+                    jsonResponse(['error' => 'Color inválido']);
+                }
+                $updates['color_nav_texto'] = $_POST['color_texto'];
+            }
+
+            foreach ($updates as $clave => $valor) {
+                $stmt = $db->prepare("UPDATE configuraciones_sitio SET valor = ? WHERE clave = ?");
+                $stmt->execute([$valor, $clave]);
+            }
+            jsonResponse(['ok' => true]);
+        }
+
         $actions = [
-            'add_slide' => ['INSERT INTO hero_slides (imagen, texto_badge, titulo, subtitulo, activo, orden) VALUES (?,?,?,?,?,?)', ['imagen','texto_badge','titulo','subtitulo','activo','orden']],
-            'edit_slide' => ['UPDATE hero_slides SET imagen=?, texto_badge=?, titulo=?, subtitulo=?, activo=?, orden=? WHERE id=?', ['imagen','texto_badge','titulo','subtitulo','activo','orden','id']],
-            'delete_slide' => ['DELETE FROM hero_slides WHERE id=?', ['id']],
-            'add_estadistica' => ['INSERT INTO hero_estadisticas (numero, etiqueta, icono, orden) VALUES (?,?,?,?)', ['numero','etiqueta','icono','orden']],
-            'edit_estadistica' => ['UPDATE hero_estadisticas SET numero=?, etiqueta=?, icono=?, orden=? WHERE id=?', ['numero','etiqueta','icono','orden','id']],
-            'delete_estadistica' => ['DELETE FROM hero_estadisticas WHERE id=?', ['id']],
+            'add_slide' => ['INSERT INTO banner_principal (imagen, texto_badge, titulo, subtitulo, activo, orden) VALUES (?,?,?,?,?,?)', ['imagen','texto_badge','titulo','subtitulo','activo','orden']],
+            'edit_slide' => ['UPDATE banner_principal SET imagen=?, texto_badge=?, titulo=?, subtitulo=?, activo=?, orden=? WHERE id=?', ['imagen','texto_badge','titulo','subtitulo','activo','orden','id']],
+            'delete_slide' => ['DELETE FROM banner_principal WHERE id=?', ['id']],
+            'add_estadistica' => ['INSERT INTO estadisticas_principales (numero, etiqueta, icono, orden) VALUES (?,?,?,?)', ['numero','etiqueta','icono','orden']],
+            'edit_estadistica' => ['UPDATE estadisticas_principales SET numero=?, etiqueta=?, icono=?, orden=? WHERE id=?', ['numero','etiqueta','icono','orden','id']],
+            'delete_estadistica' => ['DELETE FROM estadisticas_principales WHERE id=?', ['id']],
             'save_about' => ['UPDATE secciones_about SET imagen=?, titulo=?, descripcion=? WHERE id=?', ['imagen','titulo','descripcion','id']],
             'add_caracteristica' => ['INSERT INTO caracteristicas_about (icono, titulo, descripcion, orden) VALUES (?,?,?,?)', ['icono','titulo','descripcion','orden']],
             'edit_caracteristica' => ['UPDATE caracteristicas_about SET icono=?, titulo=?, descripcion=?, orden=? WHERE id=?', ['icono','titulo','descripcion','orden','id']],
@@ -45,17 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
             'edit_badges' => ['UPDATE badges_identidad SET texto=?, orden=? WHERE id=?', ['texto','orden','id']],
             'delete_badges' => ['DELETE FROM badges_identidad WHERE id=?', ['id']],
             // Menu Nav
-            'add_menu_nav' => ['INSERT INTO menu_nav (etiqueta, href, orden, activo) VALUES (?,?,?,?)', ['etiqueta','href','orden','activo']],
-            'edit_menu_nav' => ['UPDATE menu_nav SET etiqueta=?, href=?, orden=?, activo=? WHERE id=?', ['etiqueta','href','orden','activo','id']],
-            'delete_menu_nav' => ['DELETE FROM menu_nav WHERE id=?', ['id']],
+            'add_menu_nav' => ['INSERT INTO menu_navegacion (etiqueta, enlace, orden, activo) VALUES (?,?,?,?)', ['etiqueta','enlace','orden','activo']],
+            'edit_menu_nav' => ['UPDATE menu_navegacion SET etiqueta=?, enlace=?, orden=?, activo=? WHERE id=?', ['etiqueta','enlace','orden','activo','id']],
+            'delete_menu_nav' => ['DELETE FROM menu_navegacion WHERE id=?', ['id']],
             // FAQ
-            'add_faq' => ['INSERT INTO faq_items (pregunta, respuesta, orden, activo) VALUES (?,?,?,?)', ['pregunta','respuesta','orden','activo']],
-            'edit_faq' => ['UPDATE faq_items SET pregunta=?, respuesta=?, orden=?, activo=? WHERE id=?', ['pregunta','respuesta','orden','activo','id']],
-            'delete_faq' => ['DELETE FROM faq_items WHERE id=?', ['id']],
+            'add_faq' => ['INSERT INTO preguntas_frecuentes (pregunta, respuesta, orden, activo) VALUES (?,?,?,?)', ['pregunta','respuesta','orden','activo']],
+            'edit_faq' => ['UPDATE preguntas_frecuentes SET pregunta=?, respuesta=?, orden=?, activo=? WHERE id=?', ['pregunta','respuesta','orden','activo','id']],
+            'delete_faq' => ['DELETE FROM preguntas_frecuentes WHERE id=?', ['id']],
             // Footer
-            'add_footer' => ['INSERT INTO footer_config (tipo, titulo, contenido, url, icono, columna, orden) VALUES (?,?,?,?,?,?,?)', ['tipo','titulo','contenido','url','icono','columna','orden']],
-            'edit_footer' => ['UPDATE footer_config SET tipo=?, titulo=?, contenido=?, url=?, icono=?, columna=?, orden=? WHERE id=?', ['tipo','titulo','contenido','url','icono','columna','orden','id']],
-            'delete_footer' => ['DELETE FROM footer_config WHERE id=?', ['id']],
+            'add_footer' => ['INSERT INTO pie_pagina (tipo, titulo, contenido, url, icono, columna, orden) VALUES (?,?,?,?,?,?,?)', ['tipo','titulo','contenido','url','icono','columna','orden']],
+            'edit_footer' => ['UPDATE pie_pagina SET tipo=?, titulo=?, contenido=?, url=?, icono=?, columna=?, orden=? WHERE id=?', ['tipo','titulo','contenido','url','icono','columna','orden','id']],
+            'delete_footer' => ['DELETE FROM pie_pagina WHERE id=?', ['id']],
             // Subtítulos
             'save_subtitulo' => ['UPDATE secciones_subtitulos SET titulo=?, subtitulo=? WHERE id=?', ['titulo','subtitulo','id']],
             // Configuraciones
@@ -75,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     }
 }
 
-$slides = $db->query('SELECT * FROM hero_slides ORDER BY orden')->fetchAll();
-$estadisticas = $db->query('SELECT * FROM hero_estadisticas ORDER BY orden')->fetchAll();
+$slides = $db->query('SELECT * FROM banner_principal ORDER BY orden')->fetchAll();
+$estadisticas = $db->query('SELECT * FROM estadisticas_principales ORDER BY orden')->fetchAll();
 $about = $db->query('SELECT * FROM secciones_about LIMIT 1')->fetch();
 $caracteristicas = $db->query('SELECT * FROM caracteristicas_about ORDER BY orden')->fetchAll();
 $exponentes = $db->query('SELECT * FROM exponentes ORDER BY orden')->fetchAll();
@@ -96,15 +136,16 @@ if (!$identidad) {
     $identidad = $db->query('SELECT * FROM seccion_identidad LIMIT 1')->fetch();
 }
 $badges = $db->query('SELECT * FROM badges_identidad ORDER BY orden')->fetchAll();
-$menu_nav = $db->query('SELECT * FROM menu_nav ORDER BY orden')->fetchAll();
-$faq_items = $db->query('SELECT * FROM faq_items ORDER BY orden')->fetchAll();
-$footer_items = $db->query('SELECT * FROM footer_config ORDER BY columna, orden')->fetchAll();
+$menu_nav = $db->query('SELECT * FROM menu_navegacion ORDER BY orden')->fetchAll();
+$faq_items = $db->query('SELECT * FROM preguntas_frecuentes ORDER BY orden')->fetchAll();
+$footer_items = $db->query('SELECT * FROM pie_pagina ORDER BY columna, orden')->fetchAll();
 $subtitulos = $db->query('SELECT * FROM secciones_subtitulos ORDER BY seccion')->fetchAll();
 $configs = $db->query('SELECT id, clave, valor FROM configuraciones_sitio ORDER BY clave')->fetchAll();
 $configMap = [];
 foreach ($configs as $c) { $configMap[$c['clave']] = $c['valor']; }
 
 $sections = [
+    'nav' => ['label' => 'Apariencia del Nav', 'icon' => 'ph-image', 'rows' => [['id' => 1, 'logo' => $configMap['logo_nav'] ?? 'img/logos/logosason.jpg', 'color_texto' => $configMap['color_nav_texto'] ?? '#5a6066']], 'fields' => ['logo', 'color_texto'], 'can_add' => false],
     'slides' => ['label' => 'Hero Slides', 'icon' => 'ph-images', 'rows' => $slides, 'fields' => ['imagen','texto_badge','titulo','subtitulo','activo','orden'], 'can_add' => true],
     'estadisticas' => ['label' => 'Estadísticas', 'icon' => 'ph-chart-bar', 'rows' => $estadisticas, 'fields' => ['numero','etiqueta','icono','orden'], 'can_add' => true],
     'about' => ['label' => 'Sección About', 'icon' => 'ph-info', 'rows' => [$about], 'fields' => ['imagen','titulo','descripcion'], 'can_add' => false],
@@ -115,11 +156,25 @@ $sections = [
     'patrocinadores' => ['label' => 'Patrocinadores', 'icon' => 'ph-handshake', 'rows' => $patrocinadores, 'fields' => ['nombre','logo','url','orden'], 'can_add' => true],
     'identidad' => ['label' => 'Identidad', 'icon' => 'ph-seal-check', 'rows' => [$identidad], 'fields' => ['titulo','descripcion','activo'], 'can_add' => false],
     'badges' => ['label' => 'Badges Identidad', 'icon' => 'ph-tags', 'rows' => $badges, 'fields' => ['texto','orden'], 'can_add' => true],
-    'menu_nav' => ['label' => 'Menú Nav', 'icon' => 'ph-list', 'rows' => $menu_nav, 'fields' => ['etiqueta','href','orden','activo'], 'can_add' => true],
+    'menu_nav' => ['label' => 'Menú Nav', 'icon' => 'ph-list', 'rows' => $menu_nav, 'fields' => ['etiqueta','enlace','orden','activo'], 'can_add' => true],
     'faq' => ['label' => 'FAQ', 'icon' => 'ph-question', 'rows' => $faq_items, 'fields' => ['pregunta','respuesta','orden','activo'], 'can_add' => true],
     'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'rows' => $footer_items, 'fields' => ['tipo','titulo','contenido','url','icono','columna','orden'], 'can_add' => true],
     'subtitulos' => ['label' => 'Subtítulos', 'icon' => 'ph-text-aa', 'rows' => $subtitulos, 'fields' => ['seccion','titulo','subtitulo'], 'can_add' => false],
     'configuraciones' => ['label' => 'Config', 'icon' => 'ph-gear', 'rows' => $configs, 'fields' => ['clave','valor'], 'can_add' => false],
+];
+
+$groups = [
+    'nav' => ['label' => 'Nav', 'icon' => 'ph-list', 'children' => ['nav', 'menu_nav']],
+    'hero' => ['label' => 'Hero', 'icon' => 'ph-images', 'children' => ['slides', 'estadisticas']],
+    'identidad' => ['label' => 'Identidad', 'icon' => 'ph-seal-check', 'children' => ['identidad', 'badges']],
+    'nosotros' => ['label' => 'Sobre Nosotros', 'icon' => 'ph-info', 'children' => ['about', 'caracteristicas']],
+    'exponentes' => ['label' => 'Exponentes', 'icon' => 'ph-users-three', 'children' => ['exponentes']],
+    'platillos' => ['label' => 'Platillos', 'icon' => 'ph-fork-knife', 'children' => ['platillos']],
+    'itinerario' => ['label' => 'Itinerario', 'icon' => 'ph-calendar', 'children' => ['itinerario']],
+    'patrocinadores' => ['label' => 'Patrocinadores', 'icon' => 'ph-handshake', 'children' => ['patrocinadores']],
+    'faq' => ['label' => 'FAQ', 'icon' => 'ph-question', 'children' => ['faq']],
+    'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'children' => ['footer']],
+    'general' => ['label' => 'General', 'icon' => 'ph-gear', 'children' => ['subtitulos', 'configuraciones']],
 ];
 ?>
 <!DOCTYPE html>
@@ -244,6 +299,28 @@ $sections = [
         .main-header h1 span { color: #adb5bd; font-weight: 400; font-size: 0.95rem; }
         .page-content { display: none; }
         .page-content.active { display: block; }
+        .tab-bar {
+            display: none;
+            gap: 6px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 0;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 18px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #5a6066;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -1px;
+        }
+        .tab-btn:hover { color: #1a1a1a; }
+        .tab-btn.active { color: #ff6b00; border-bottom-color: #ff6b00; font-weight: 600; }
 
         /* CARDS */
         .section-card {
@@ -391,16 +468,17 @@ $sections = [
 <!-- SIDEBAR -->
 <aside class="sidebar">
     <div class="sidebar-brand">
-        <img src="../images/logosason.jpg" alt="Sazón Córdoba">
+        <img src="../../img/logos/logosason.jpg" alt="Sazón Córdoba">
         <h2>Sazón Córdoba</h2>
     </div>
     <nav class="sidebar-nav">
         <div class="nav-label">Contenido</div>
-        <?php foreach ($sections as $key => $sec): ?>
-            <div class="nav-item" data-section="<?= $key ?>" onclick="showSection('<?= $key ?>')">
-                <i class="<?= $sec['icon'] ?>"></i>
-                <span><?= $sec['label'] ?></span>
-                <span class="count-badge"><?= count($sec['rows']) ?></span>
+        <?php foreach ($groups as $gkey => $g): ?>
+            <?php $count = array_sum(array_map(fn($c) => count($sections[$c]['rows']), $g['children'])); ?>
+            <div class="nav-item" data-group="<?= $gkey ?>" onclick="showGroup('<?= $gkey ?>')">
+                <i class="<?= $g['icon'] ?>"></i>
+                <span><?= $g['label'] ?></span>
+                <span class="count-badge"><?= $count ?></span>
             </div>
         <?php endforeach; ?>
     </nav>
@@ -421,6 +499,8 @@ $sections = [
         <h1 id="pageTitle">Hero Slides <span id="pageCount"></span></h1>
         <button class="btn btn-primary" id="btnAdd" onclick="openModal(currentSection,'add')">+ Agregar</button>
     </div>
+
+    <div class="tab-bar" id="tabBar"></div>
 
     <?php foreach ($sections as $key => $sec): ?>
     <div class="page-content" id="page-<?= $key ?>">
@@ -445,6 +525,11 @@ $sections = [
                             <td>
                                 <?php if (in_array($f, ['imagen','foto','logo'])): ?>
                                     <?php if ($row[$f]): ?><img src="<?= htmlspecialchars($row[$f]) ?>" class="img-preview"><?php else: ?>—<?php endif; ?>
+                                <?php elseif ($f === 'color_texto'): ?>
+                                    <span style="display:inline-flex; align-items:center; gap:8px;">
+                                        <span style="display:inline-block; width:18px; height:18px; border-radius:4px; background:<?= htmlspecialchars($row[$f]) ?>; border:1px solid #e9ecef;"></span>
+                                        <?= htmlspecialchars($row[$f]) ?>
+                                    </span>
                                 <?php elseif ($f === 'activo'): ?>
                                     <span class="<?= $row[$f] ? 'toggle-yes' : 'toggle-no' ?>"><?= $row[$f] ? 'Sí' : 'No' ?></span>
                                 <?php elseif (in_array($f, ['subtitulo','descripcion'])): ?>
@@ -456,7 +541,7 @@ $sections = [
                         <?php endforeach; ?>
                         <td class="actions">
                             <button class="btn btn-ghost btn-sm" onclick="openModal('<?= $key ?>','edit',<?= htmlspecialchars(json_encode($row)) ?>)">Editar</button>
-                            <?php if (!in_array($key, ['about','identidad','subtitulos','configuraciones'])): ?>
+                            <?php if (!in_array($key, ['about','identidad','subtitulos','configuraciones','nav'])): ?>
                                 <button class="btn btn-danger btn-sm" onclick="deleteItem('<?= $key ?>',<?= $row['id'] ?>)">Eliminar</button>
                             <?php endif; ?>
                         </td>
@@ -487,6 +572,10 @@ $sections = [
 
 <script>
 const fieldConfig = {
+    nav: [
+        {name:'logo', label:'Logo (imagen)', type:'file'},
+        {name:'color_texto', label:'Color del texto del menú', type:'color'},
+    ],
     slides: [
         {name:'imagen', label:'URL Imagen', type:'url'},
         {name:'texto_badge', label:'Texto Badge', type:'text'},
@@ -551,7 +640,7 @@ const fieldConfig = {
     ],
     menu_nav: [
         {name:'etiqueta', label:'Etiqueta', type:'text'},
-        {name:'href', label:'Enlace (href)', type:'text'},
+        {name:'enlace', label:'Enlace', type:'text'},
         {name:'orden', label:'Orden', type:'number'},
         {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
     ],
@@ -582,7 +671,7 @@ const fieldConfig = {
 };
 
 const pageTitles = {
-    slides: 'Hero Slides', estadisticas: 'Estadísticas del Hero', about: 'Sección About',
+    nav: 'Logo del Nav', slides: 'Hero Slides', estadisticas: 'Estadísticas del Hero', about: 'Sección About',
     caracteristicas: 'Características About', exponentes: 'Exponentes (Chefs)',
     platillos: 'Platillos Destacados', itinerario: 'Itinerario', patrocinadores: 'Patrocinadores',
     identidad: 'Sección Identidad', badges: 'Badges Identidad', menu_nav: 'Menú Navegación',
@@ -591,21 +680,62 @@ const pageTitles = {
 };
 
 const canAdd = {
-    slides:true, estadisticas:true, about:false, caracteristicas:true,
+    nav:false, slides:true, estadisticas:true, about:false, caracteristicas:true,
     exponentes:true, platillos:true, itinerario:true, patrocinadores:true,
     identidad:false, badges:true, menu_nav:true, faq:true, footer:true,
     subtitulos:false, configuraciones:false
 };
 
-let currentSection = 'slides';
+const groups = {
+    nav: { label: 'Nav', children: ['nav', 'menu_nav'] },
+    hero: { label: 'Hero', children: ['slides', 'estadisticas'] },
+    identidad: { label: 'Identidad', children: ['identidad', 'badges'] },
+    nosotros: { label: 'Sobre Nosotros', children: ['about', 'caracteristicas'] },
+    exponentes: { label: 'Exponentes', children: ['exponentes'] },
+    platillos: { label: 'Platillos', children: ['platillos'] },
+    itinerario: { label: 'Itinerario', children: ['itinerario'] },
+    patrocinadores: { label: 'Patrocinadores', children: ['patrocinadores'] },
+    faq: { label: 'FAQ', children: ['faq'] },
+    footer: { label: 'Footer', children: ['footer'] },
+    general: { label: 'General', children: ['subtitulos', 'configuraciones'] },
+};
+
+let currentSection = 'nav';
+let currentGroup = 'nav';
 let currentMode = '';
+
+function showGroup(group) {
+    currentGroup = group;
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.nav-item[data-group="${group}"]`).classList.add('active');
+    renderTabs(group);
+    showSection(groups[group].children[0]);
+}
+
+function renderTabs(group) {
+    const children = groups[group].children;
+    const tabBar = document.getElementById('tabBar');
+    if (children.length > 1) {
+        tabBar.style.display = 'flex';
+        tabBar.innerHTML = children.map((c, i) =>
+            `<button class="tab-btn${i === 0 ? ' active' : ''}" data-tab="${c}" onclick="switchTab('${c}', this)">${pageTitles[c] || c}</button>`
+        ).join('');
+    } else {
+        tabBar.style.display = 'none';
+        tabBar.innerHTML = '';
+    }
+}
+
+function switchTab(section, btn) {
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+    showSection(section);
+}
 
 function showSection(section) {
     currentSection = section;
     document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById('page-' + section).classList.add('active');
-    document.querySelector(`.nav-item[data-section="${section}"]`).classList.add('active');
     document.getElementById('pageTitle').textContent = pageTitles[section] || section;
     document.getElementById('btnAdd').style.display = canAdd[section] ? 'inline-flex' : 'none';
 }
@@ -627,6 +757,11 @@ function openModal(section, mode, data = null) {
             div.innerHTML += `<textarea name="${f.name}">${val}</textarea>`;
         } else if (f.type === 'select') {
             div.innerHTML += `<select name="${f.name}">${f.options.map(o => `<option value="${o.v}"${val == o.v ? ' selected' : ''}>${o.l}</option>`).join('')}</select>`;
+        } else if (f.type === 'file') {
+            if (val) div.innerHTML += `<img src="../../${val}" class="img-preview" style="display:block; margin-bottom:8px;">`;
+            div.innerHTML += `<input type="file" name="${f.name}" accept="image/*">`;
+        } else if (section === 'configuraciones' && f.name === 'valor' && data?.clave === 'color_nav_texto') {
+            div.innerHTML += `<input type="color" name="${f.name}" value="${val || '#5a6066'}">`;
         } else {
             div.innerHTML += `<input type="${f.type}" name="${f.name}" value="${val}">`;
         }
@@ -641,7 +776,7 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
     e.preventDefault();
     showLoader();
     const formData = new FormData(this);
-    const saveActions = { about:'save_about', identidad:'save_identidad', subtitulos:'save_subtitulo', configuraciones:'save_config' };
+    const saveActions = { about:'save_about', identidad:'save_identidad', subtitulos:'save_subtitulo', configuraciones:'save_config', nav:'save_logo_nav' };
     formData.set('action', currentMode === 'add' ? 'add_' + currentSection : (saveActions[currentSection] || 'edit_' + currentSection));
     try {
         const res = await fetch('?action=' + formData.get('action'), { method:'POST', body: formData });
@@ -702,7 +837,7 @@ function hideLoader() { document.getElementById('globalLoader').style.display = 
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 
-showSection('slides');
+showGroup('nav');
 </script>
 </body>
 </html>

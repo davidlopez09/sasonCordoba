@@ -23,15 +23,25 @@ async function loadSiteData() {
 
 function renderNav(menu, config) {
     const ul = document.getElementById('nav-links');
-    if (!ul) return;
-    ul.innerHTML = (menu || []).map(item =>
-        `<li><a href="${item.href}">${item.etiqueta}</a></li>`
-    ).join('');
+    if (ul) {
+        ul.innerHTML = (menu || []).map(item =>
+            `<li><a href="${item.enlace}">${item.etiqueta}</a></li>`
+        ).join('');
+    }
 
     const btn = document.getElementById('btn-reservar');
     if (btn && config) {
         btn.href = config.reservar_url || '#itinerary';
         btn.textContent = config.reservar_texto || 'Reservar Ahora';
+    }
+
+    const navLogo = document.querySelector('.brand-logo');
+    if (navLogo && config?.logo_nav) {
+        navLogo.src = config.logo_nav;
+    }
+
+    if (config?.color_nav_texto) {
+        document.documentElement.style.setProperty('--nav-link-color', config.color_nav_texto);
     }
 }
 
@@ -222,7 +232,7 @@ function renderFooterCol(items, type) {
 
     if (type === 'brand') {
         className = 'footer-brand';
-        content = `<a href="#home" class="logo"><img src="images/logosason.jpg" alt="Sazón Córdoba" style="max-height: 50px; border-radius: 5px;"></a>`;
+        content = `<a href="#home" class="logo"><img src="img/logos/logosason.jpg" alt="Sazón Córdoba" style="max-height: 50px; border-radius: 5px;"></a>`;
         items.forEach(item => {
             if (item.tipo === 'texto') {
                 content += `<p>${item.contenido || ''}</p>`;

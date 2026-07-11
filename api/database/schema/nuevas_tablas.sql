@@ -22,18 +22,18 @@ CREATE TABLE IF NOT EXISTS public.badges_identidad (
 );
 
 -- 3. TABLA: Menú de Navegación
-CREATE TABLE IF NOT EXISTS public.menu_nav (
+CREATE TABLE IF NOT EXISTS public.menu_navegacion (
     id BIGSERIAL PRIMARY KEY,
     etiqueta VARCHAR(255) NOT NULL,
-    href VARCHAR(255) NOT NULL,
+    enlace VARCHAR(255) NOT NULL,
     orden INTEGER DEFAULT 0,
     activo BOOLEAN DEFAULT true,
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
--- 4. TABLA: FAQ Items
-CREATE TABLE IF NOT EXISTS public.faq_items (
+-- 4. TABLA: Preguntas Frecuentes
+CREATE TABLE IF NOT EXISTS public.preguntas_frecuentes (
     id BIGSERIAL PRIMARY KEY,
     pregunta TEXT NOT NULL,
     respuesta TEXT NOT NULL,
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS public.faq_items (
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
--- 5. TABLA: Footer Config
-CREATE TABLE IF NOT EXISTS public.footer_config (
+-- 5. TABLA: Pie de Página
+CREATE TABLE IF NOT EXISTS public.pie_pagina (
     id BIGSERIAL PRIMARY KEY,
     tipo VARCHAR(50) NOT NULL DEFAULT 'texto',
     titulo VARCHAR(255),
@@ -82,7 +82,7 @@ INSERT INTO public.badges_identidad (texto, orden) VALUES
 ('Crecimiento empresarial', 3)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.menu_nav (etiqueta, href, orden, activo) VALUES
+INSERT INTO public.menu_navegacion (etiqueta, enlace, orden, activo) VALUES
 ('Inicio', '#home', 0, true),
 ('Identidad', '#identity', 1, true),
 ('El Evento', '#about', 2, true),
@@ -91,14 +91,14 @@ INSERT INTO public.menu_nav (etiqueta, href, orden, activo) VALUES
 ('Itinerario', '#itinerary', 5, true)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.faq_items (pregunta, respuesta, orden, activo) VALUES
+INSERT INTO public.preguntas_frecuentes (pregunta, respuesta, orden, activo) VALUES
 ('¿Dónde puedo comprar mis entradas?', 'Las entradas estarán disponibles en las taquillas del evento o pueden adquirirse de forma anticipada a través de la página web de la Cámara de Comercio de Montería y puntos de venta autorizados.', 0, true),
 ('¿El evento es apto para niños?', '¡Por supuesto! Sazón Córdoba es un evento familiar. Contaremos con zonas especiales y platillos pensados para los más pequeños, además de un ambiente seguro y agradable.', 1, true),
 ('¿Habrá opciones vegetarianas o veganas?', 'Sí. Varios de nuestros restaurantes y chefs invitados tendrán opciones vegetarianas, veganas y libres de gluten para garantizar que todos disfruten de la experiencia gastronómica.', 2, true),
 ('¿Cuentan con parqueadero disponible?', 'El centro de eventos dispone de un amplio parqueadero vigilado para los asistentes. Recomendamos llegar con anticipación para asegurar tu lugar o utilizar servicios de transporte.', 3, true)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.footer_config (tipo, titulo, contenido, url, icono, columna, orden) VALUES
+INSERT INTO public.pie_pagina (tipo, titulo, contenido, url, icono, columna, orden) VALUES
 ('texto', 'Sazón Córdoba', 'Una experiencia gastronómica sin igual en el corazón de Montería.', NULL, NULL, '1', 0),
 ('red_social', NULL, NULL, '#', 'ph-facebook-logo', '1', 1),
 ('red_social', NULL, NULL, '#', 'ph-instagram-logo', '1', 2),
@@ -123,5 +123,7 @@ ON CONFLICT (seccion) DO NOTHING;
 INSERT INTO public.configuraciones_sitio (clave, valor) VALUES
 ('reservar_url', '#itinerary'),
 ('reservar_texto', 'Reservar Ahora'),
-('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.')
+('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.'),
+('logo_nav', 'img/logos/logosason.jpg'),
+('color_nav_texto', '#5a6066')
 ON CONFLICT (clave) DO NOTHING;
