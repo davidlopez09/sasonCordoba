@@ -6,6 +6,7 @@ if (!isset($_SESSION['admin'])) {
 }
 
 require __DIR__ . '/../db.php';
+require __DIR__ . '/../supabase_storage.php';
 $db = getDB();
 
 function jsonResponse($data) { echo json_encode($data, JSON_UNESCAPED_UNICODE); exit; }
@@ -33,10 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
                     jsonResponse(['error' => 'El archivo no es una imagen válida']);
                 }
                 $filename = 'nav_logo_' . bin2hex(random_bytes(6)) . '.' . $ext;
-                if (!move_uploaded_file($file['tmp_name'], __DIR__ . '/../../img/logos/' . $filename)) {
-                    jsonResponse(['error' => 'No se pudo guardar el archivo']);
+                try {
+                    $updates['logo_nav'] = uploadToSupabaseStorage('logo_nav', $filename, $file['tmp_name'], $allowed[$ext]);
+                } catch (Exception $e) {
+                    jsonResponse(['error' => 'No se pudo subir el archivo: ' . $e->getMessage()]);
                 }
-                $updates['logo_nav'] = 'img/logos/' . $filename;
             } elseif (!empty($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
                 jsonResponse(['error' => 'Error al subir el archivo']);
             }
