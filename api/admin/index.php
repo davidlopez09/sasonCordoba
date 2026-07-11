@@ -1002,6 +1002,7 @@ async function activarLogo(id) {
 }
 
 async function refreshSection(section) {
+    showLoader();
     try {
         const res = await fetch(window.location.href, { credentials: 'same-origin' });
         const html = await res.text();
@@ -1016,6 +1017,9 @@ async function refreshSection(section) {
         if (freshBadge && currentBadge) currentBadge.textContent = freshBadge.textContent;
     } catch (e) {
         location.reload();
+        return;
+    } finally {
+        hideLoader();
     }
 }
 
