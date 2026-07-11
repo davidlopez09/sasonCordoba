@@ -25,7 +25,7 @@ function renderNav(menu, config) {
     const ul = document.getElementById('nav-links');
     if (ul) {
         ul.innerHTML = (menu || []).map(item =>
-            `<li><a href="${item.enlace}">${item.etiqueta}</a></li>`
+            `<li><a href="${item.enlace}" style="color:${item.color || '#ffffff'}">${item.etiqueta}</a></li>`
         ).join('');
     }
 
