@@ -21,6 +21,15 @@ CREATE TABLE IF NOT EXISTS public.badges_identidad (
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
+-- 2a. TABLA: Logos del Nav (biblioteca, uno activo a la vez)
+CREATE TABLE IF NOT EXISTS public.logos_nav (
+    id BIGSERIAL PRIMARY KEY,
+    logo VARCHAR(500) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);
+
 -- 3. TABLA: Menú de Navegación
 CREATE TABLE IF NOT EXISTS public.menu_navegacion (
     id BIGSERIAL PRIMARY KEY,

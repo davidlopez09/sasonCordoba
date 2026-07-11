@@ -190,6 +190,15 @@ CREATE TABLE IF NOT EXISTS public.badges_identidad (
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
 
+-- 13a. TABLA: Logos del Nav (biblioteca, uno activo a la vez)
+CREATE TABLE IF NOT EXISTS public.logos_nav (
+    id BIGSERIAL PRIMARY KEY,
+    logo VARCHAR(500) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);
+
 -- 13. TABLA: Menú de Navegación
 CREATE TABLE IF NOT EXISTS public.menu_navegacion (
     id BIGSERIAL PRIMARY KEY,
@@ -293,7 +302,9 @@ ON CONFLICT (seccion) DO NOTHING;
 INSERT INTO public.configuraciones_sitio (clave, valor) VALUES
 ('reservar_url', '#itinerary'),
 ('reservar_texto', 'Reservar Ahora'),
-('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.'),
-('logo_nav', 'img/logos/logosason.jpg'),
-('color_nav_texto', '#5a6066')
+('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.')
 ON CONFLICT (clave) DO NOTHING;
+
+INSERT INTO public.logos_nav (logo, activo) VALUES
+('img/logos/logosason.jpg', true)
+ON CONFLICT DO NOTHING;
