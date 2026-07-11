@@ -85,8 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
             'edit_badges' => ['UPDATE badges_identidad SET texto=?, orden=? WHERE id=?', ['texto','orden','id']],
             'delete_badges' => ['DELETE FROM badges_identidad WHERE id=?', ['id']],
             // Menu Nav
-            'add_menu_nav' => ['INSERT INTO menu_navegacion (etiqueta, enlace, orden, activo) VALUES (?,?,?,?)', ['etiqueta','enlace','orden','activo']],
-            'edit_menu_nav' => ['UPDATE menu_navegacion SET etiqueta=?, enlace=?, orden=?, activo=? WHERE id=?', ['etiqueta','enlace','orden','activo','id']],
+            'add_menu_nav' => ['INSERT INTO menu_navegacion (etiqueta, enlace, orden, activo, color) VALUES (?,?,?,?,?)', ['etiqueta','enlace','orden','activo','color']],
+            'edit_menu_nav' => ['UPDATE menu_navegacion SET etiqueta=?, enlace=?, orden=?, activo=?, color=? WHERE id=?', ['etiqueta','enlace','orden','activo','color','id']],
             'delete_menu_nav' => ['DELETE FROM menu_navegacion WHERE id=?', ['id']],
             // FAQ
             'add_faq' => ['INSERT INTO preguntas_frecuentes (pregunta, respuesta, orden, activo) VALUES (?,?,?,?)', ['pregunta','respuesta','orden','activo']],
@@ -156,7 +156,7 @@ $sections = [
     'patrocinadores' => ['label' => 'Patrocinadores', 'icon' => 'ph-handshake', 'rows' => $patrocinadores, 'fields' => ['nombre','logo','url','orden'], 'can_add' => true],
     'identidad' => ['label' => 'Identidad', 'icon' => 'ph-seal-check', 'rows' => [$identidad], 'fields' => ['titulo','descripcion','activo'], 'can_add' => false],
     'badges' => ['label' => 'Badges Identidad', 'icon' => 'ph-tags', 'rows' => $badges, 'fields' => ['texto','orden'], 'can_add' => true],
-    'menu_nav' => ['label' => 'Menú Nav', 'icon' => 'ph-list', 'rows' => $menu_nav, 'fields' => ['etiqueta','enlace','orden','activo'], 'can_add' => true],
+    'menu_nav' => ['label' => 'Menú Nav', 'icon' => 'ph-list', 'rows' => $menu_nav, 'fields' => ['etiqueta','enlace','orden','activo','color'], 'can_add' => true],
     'faq' => ['label' => 'FAQ', 'icon' => 'ph-question', 'rows' => $faq_items, 'fields' => ['pregunta','respuesta','orden','activo'], 'can_add' => true],
     'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'rows' => $footer_items, 'fields' => ['tipo','titulo','contenido','url','icono','columna','orden'], 'can_add' => true],
     'subtitulos' => ['label' => 'Subtítulos', 'icon' => 'ph-text-aa', 'rows' => $subtitulos, 'fields' => ['seccion','titulo','subtitulo'], 'can_add' => false],
@@ -525,7 +525,7 @@ $groups = [
                             <td>
                                 <?php if (in_array($f, ['imagen','foto','logo'])): ?>
                                     <?php if ($row[$f]): ?><img src="<?= htmlspecialchars($row[$f]) ?>" class="img-preview"><?php else: ?>—<?php endif; ?>
-                                <?php elseif ($f === 'color_texto'): ?>
+                                <?php elseif (in_array($f, ['color_texto', 'color'])): ?>
                                     <span style="display:inline-flex; align-items:center; gap:8px;">
                                         <span style="display:inline-block; width:18px; height:18px; border-radius:4px; background:<?= htmlspecialchars($row[$f]) ?>; border:1px solid #e9ecef;"></span>
                                         <?= htmlspecialchars($row[$f]) ?>
@@ -643,6 +643,7 @@ const fieldConfig = {
         {name:'enlace', label:'Enlace', type:'text'},
         {name:'orden', label:'Orden', type:'number'},
         {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     faq: [
         {name:'pregunta', label:'Pregunta', type:'textarea'},
