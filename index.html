@@ -18,20 +18,24 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/style.css?v=10">
 </head>
 <body>
+
+    <!-- Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="page-loader-spinner"></div>
+    </div>
 
     <!-- Navbar -->
     <nav id="navbar" class="navbar">
         <div class="nav-container">
             <a href="#home" class="logo">
-                <img src="img/logos/logosason.jpg" alt="Sazón Córdoba" class="brand-logo">
+                <img alt="Sazón Córdoba" class="brand-logo">
             </a>
             <ul class="nav-links" id="nav-links"></ul>
-            <a href="#itinerary" class="btn btn-primary" id="btn-reservar">Reservar Ahora</a>
-            <a href="api/admin/login.php" class="btn btn-outline" style="font-size:0.85rem; padding:8px 18px;">Ingresar</a>
-            
+            <div class="nav-actions" id="nav-actions"></div>
+
             <button class="mobile-menu-btn" aria-label="Abrir menú">
                 <i class="ph ph-list"></i>
             </button>
@@ -43,15 +47,10 @@
         <div class="hero-slider" id="hero-slider"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
-            <div class="badge" id="hero-badge">Edición 2026</div>
-            <h1 class="hero-title" id="hero-title">El Sabor que <br><span class="text-gradient">Enciende</span> a Montería</h1>
-            <p class="hero-subtitle" id="hero-subtitle">Únete al evento culinario más prestigioso de la región, organizado por la Cámara de Comercio de Montería. Descubre texturas, aromas y los mejores chefs del país.</p>
-            <div class="hero-actions">
-                <a href="#itinerary" class="btn btn-primary btn-large">Ver Menú</a>
-                <a href="#about" class="btn btn-outline btn-large hero-btn">
-                    <i class="ph ph-play-circle"></i> Descubre Más
-                </a>
-            </div>
+            <div class="badge hero-text" id="hero-badge"></div>
+            <h1 class="hero-title hero-text" id="hero-title"></h1>
+            <p class="hero-subtitle hero-text" id="hero-subtitle"></p>
+            <div class="hero-actions" id="hero-actions"></div>
             
             <div class="hero-stats" id="hero-stats"></div>
         </div>
@@ -70,7 +69,7 @@
     <section id="about" class="section">
         <div class="container about-container">
             <div class="about-image-wrapper" data-aos="fade-right">
-                <img src="" alt="Sazón Córdoba" class="about-img about-img-main" id="about-img">
+                <img alt="Sazón Córdoba" class="about-img about-img-main" id="about-img">
                 <div class="about-img-badge">
                     <i class="ph ph-star-fill"></i>
                     <span>Experiencia Premium</span>
@@ -131,8 +130,8 @@
     <!-- Sponsors Section -->
     <section id="sponsors" class="section">
         <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up">Nuestros <span class="text-gradient">Patrocinadores</span></h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Haciendo posible el mejor evento de la ciudad.</p>
+            <h2 class="section-title" data-aos="fade-up" id="sponsors-title">Nuestros <span class="text-gradient">Patrocinadores</span></h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="sponsors-subtitle">Haciendo posible el mejor evento de la ciudad.</p>
             
             <div class="sponsors-grid" id="sponsors-grid" data-aos="zoom-in" data-aos-delay="200"></div>
         </div>
@@ -148,6 +147,6 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="./js/main.js"></script>
+    <script src="./js/main.js?v=20"></script>
 </body>
 </html>

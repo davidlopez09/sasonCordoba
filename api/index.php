@@ -41,6 +41,27 @@ $isSiteRoute = $method === 'GET' && (
     $route === 'site' ||
     basename($path) === 'index.php'
 );
+$isNavRoute = $method === 'GET' && $route === 'nav';
+
+if ($isNavRoute) {
+    $data = [];
+
+    $data['menu_nav'] = $db->query('SELECT * FROM menu_navegacion WHERE activo = true ORDER BY orden')->fetchAll();
+    $data['botones_nav'] = $db->query('SELECT * FROM botones_nav WHERE activo = true ORDER BY orden')->fetchAll();
+    $data['configuraciones'] = [];
+
+    $logoActivo = $db->query('SELECT logo FROM logos_nav WHERE activo = true LIMIT 1')->fetchColumn();
+    if ($logoActivo) {
+        $data['configuraciones']['logo_nav'] = $logoActivo;
+    }
+
+    $colorNavFondo = $db->query("SELECT valor FROM configuraciones_sitio WHERE clave = 'color_nav_fondo'")->fetchColumn();
+    if ($colorNavFondo) {
+        $data['configuraciones']['color_nav_fondo'] = $colorNavFondo;
+    }
+
+    jsonResponse($data);
+}
 
 if ($isSiteRoute) {
     $data = [];
@@ -48,6 +69,12 @@ if ($isSiteRoute) {
     // Hero slides
     $stmt = $db->query('SELECT * FROM banner_principal WHERE activo = true ORDER BY orden');
     $data['hero']['slides'] = $stmt->fetchAll();
+
+    // Hero texto (único, no varía por slide)
+    $data['hero']['texto'] = $db->query('SELECT * FROM hero_texto LIMIT 1')->fetch() ?: null;
+
+    // Hero botones
+    $data['hero']['botones'] = $db->query('SELECT * FROM botones_hero WHERE activo = true ORDER BY orden')->fetchAll();
 
     // Hero estadisticas
     $stmt = $db->query('SELECT * FROM estadisticas_principales ORDER BY orden');
@@ -89,6 +116,10 @@ if ($isSiteRoute) {
     $stmt = $db->query('SELECT * FROM menu_navegacion WHERE activo = true ORDER BY orden');
     $data['menu_nav'] = $stmt->fetchAll();
 
+    // Botones del nav
+    $stmt = $db->query('SELECT * FROM botones_nav WHERE activo = true ORDER BY orden');
+    $data['botones_nav'] = $stmt->fetchAll();
+
     // FAQ items
     $stmt = $db->query('SELECT * FROM preguntas_frecuentes WHERE activo = true ORDER BY orden');
     $data['faq'] = $stmt->fetchAll();
@@ -104,6 +135,7 @@ if ($isSiteRoute) {
         $data['subtitulos'][$row['seccion']] = [
             'titulo' => $row['titulo'],
             'subtitulo' => $row['subtitulo'],
+            'color' => $row['color'],
         ];
     }
 
@@ -119,6 +151,21 @@ if ($isSiteRoute) {
     if ($logoActivo) {
         $data['configuraciones']['logo_nav'] = $logoActivo;
     }
+
+    // Secciones dinámicas (constructor de secciones por bloques)
+    $seccionesDin = $db->query('SELECT * FROM secciones_dinamicas WHERE activo = true ORDER BY orden')->fetchAll();
+    foreach ($seccionesDin as &$sd) {
+        $stmt = $db->prepare('SELECT * FROM bloques_dinamicos WHERE seccion_id = ? ORDER BY orden');
+        $stmt->execute([$sd['id']]);
+        $bloques = $stmt->fetchAll();
+        foreach ($bloques as &$b) {
+            $b['contenido'] = json_decode($b['contenido'], true);
+        }
+        unset($b);
+        $sd['bloques'] = $bloques;
+    }
+    unset($sd);
+    $data['secciones_dinamicas'] = $seccionesDin;
 
     jsonResponse($data);
 }

@@ -24,11 +24,42 @@ ON CONFLICT (correo) DO NOTHING;
 CREATE TABLE IF NOT EXISTS public.banner_principal (
     id BIGSERIAL PRIMARY KEY,
     imagen VARCHAR(255) NOT NULL,
+    activo BOOLEAN DEFAULT true,
+    orden INTEGER DEFAULT 0,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+-- Migración para bases ya existentes: el texto del hero pasa a ser único (tabla hero_texto),
+-- ya no varía por slide.
+ALTER TABLE public.banner_principal DROP COLUMN IF EXISTS texto_badge;
+ALTER TABLE public.banner_principal DROP COLUMN IF EXISTS titulo;
+ALTER TABLE public.banner_principal DROP COLUMN IF EXISTS subtitulo;
+
+-- 2a. TABLA: Texto único del Hero (badge/título/subtítulo, no cambia por slide)
+CREATE TABLE IF NOT EXISTS public.hero_texto (
+    id BIGSERIAL PRIMARY KEY,
     texto_badge VARCHAR(255),
     titulo VARCHAR(255),
     subtitulo TEXT,
-    activo BOOLEAN DEFAULT true,
+    color VARCHAR(20) NOT NULL DEFAULT '#ffffff',
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+-- Backfill para bases ya existentes donde hero_texto se creó sin la columna `color`
+ALTER TABLE public.hero_texto ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#ffffff';
+
+-- 2c. TABLA: Botones del Hero (agregar/editar/eliminar, colores)
+CREATE TABLE IF NOT EXISTS public.botones_hero (
+    id BIGSERIAL PRIMARY KEY,
+    texto VARCHAR(100) NOT NULL,
+    enlace VARCHAR(255) NOT NULL,
+    color_fondo VARCHAR(20) NOT NULL DEFAULT '#ff6b00',
+    color_texto VARCHAR(20) NOT NULL DEFAULT '#ffffff',
+    color_borde VARCHAR(20) NOT NULL DEFAULT 'transparent',
     orden INTEGER DEFAULT 0,
+    activo BOOLEAN DEFAULT true,
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
@@ -40,9 +71,13 @@ CREATE TABLE IF NOT EXISTS public.estadisticas_principales (
     etiqueta VARCHAR(255) NOT NULL,
     icono VARCHAR(255),
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#ffffff',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde estadisticas_principales se creó sin la columna `color`
+ALTER TABLE public.estadisticas_principales ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#ffffff';
 
 -- 4. TABLA: Secciones About
 CREATE TABLE IF NOT EXISTS public.secciones_about (
@@ -50,9 +85,13 @@ CREATE TABLE IF NOT EXISTS public.secciones_about (
     imagen VARCHAR(255),
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT NOT NULL,
+    color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde secciones_about se creó sin la columna `color`
+ALTER TABLE public.secciones_about ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a';
 
 -- 5. TABLA: Características About
 CREATE TABLE IF NOT EXISTS public.caracteristicas_about (
@@ -61,9 +100,13 @@ CREATE TABLE IF NOT EXISTS public.caracteristicas_about (
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT NOT NULL,
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde caracteristicas_about se creó sin la columna `color`
+ALTER TABLE public.caracteristicas_about ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a';
 
 -- 6. TABLA: Exponentes
 CREATE TABLE IF NOT EXISTS public.exponentes (
@@ -74,9 +117,13 @@ CREATE TABLE IF NOT EXISTS public.exponentes (
     instagram_url VARCHAR(255),
     twitter_url VARCHAR(255),
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde exponentes se creó sin la columna `color`
+ALTER TABLE public.exponentes ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a';
 
 -- 7. TABLA: Platillos Destacados
 CREATE TABLE IF NOT EXISTS public.platillos_destacados (
@@ -85,9 +132,13 @@ CREATE TABLE IF NOT EXISTS public.platillos_destacados (
     descripcion TEXT NOT NULL,
     imagen VARCHAR(255),
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#ffffff',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde platillos_destacados se creó sin la columna `color`
+ALTER TABLE public.platillos_destacados ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#ffffff';
 
 -- 8. TABLA: Itinerario Items
 CREATE TABLE IF NOT EXISTS public.itinerario_items (
@@ -98,9 +149,17 @@ CREATE TABLE IF NOT EXISTS public.itinerario_items (
     nombre_chef VARCHAR(255) NOT NULL,
     descripcion TEXT NOT NULL,
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a',
+    color_fondo VARCHAR(40) NOT NULL DEFAULT '#ffffff',
+    color_borde VARCHAR(40) NOT NULL DEFAULT 'rgba(0,0,0,0.08)',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde itinerario_items se creó sin las columnas de color
+ALTER TABLE public.itinerario_items ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a';
+ALTER TABLE public.itinerario_items ADD COLUMN IF NOT EXISTS color_fondo VARCHAR(40) NOT NULL DEFAULT '#ffffff';
+ALTER TABLE public.itinerario_items ADD COLUMN IF NOT EXISTS color_borde VARCHAR(40) NOT NULL DEFAULT 'rgba(0,0,0,0.08)';
 
 -- 9. TABLA: Patrocinadores
 CREATE TABLE IF NOT EXISTS public.patrocinadores (
@@ -126,10 +185,19 @@ CREATE TABLE IF NOT EXISTS public.configuraciones_sitio (
 -- DATOS DE EJEMPLO
 -- =============================================
 
-INSERT INTO public.banner_principal (imagen, texto_badge, titulo, subtitulo, activo, orden) VALUES
-('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80', 'Edición 2026', 'El Sabor que Enciende a Montería', 'Descubre el evento culinario más prestigioso de la región.', true, 0),
-('https://images.unsplash.com/photo-1414235077428-338988692140?w=1920&q=80', 'Edición 2026', 'Alta Cocina en Vivo', 'Los mejores chefs del país en un solo lugar.', true, 1),
-('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80', 'Edición 2026', 'Sabores que Enamoran', 'Una experiencia gastronómica inolvidable.', true, 2)
+INSERT INTO public.banner_principal (imagen, activo, orden) VALUES
+('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80', true, 0),
+('https://images.unsplash.com/photo-1414235077428-338988692140?w=1920&q=80', true, 1),
+('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80', true, 2)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.hero_texto (texto_badge, titulo, subtitulo) VALUES
+('Edición 2026', 'El Sabor que Enciende a Montería', 'Descubre el evento culinario más prestigioso de la región.')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.botones_hero (texto, enlace, color_fondo, color_texto, color_borde, orden, activo) VALUES
+('Ver Menú', '#itinerary', '#ff6b00', '#ffffff', 'transparent', 1, true),
+('Descubre Más', '#about', 'transparent', '#ffffff', '#ffffff', 2, true)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.estadisticas_principales (numero, etiqueta, orden) VALUES
@@ -177,6 +245,7 @@ CREATE TABLE IF NOT EXISTS public.seccion_identidad (
     titulo VARCHAR(255) NOT NULL,
     descripcion TEXT NOT NULL,
     activo BOOLEAN DEFAULT true,
+    color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
@@ -186,6 +255,8 @@ CREATE TABLE IF NOT EXISTS public.badges_identidad (
     id BIGSERIAL PRIMARY KEY,
     texto VARCHAR(255) NOT NULL,
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '#ff6b00',
+    color_fondo VARCHAR(40) NOT NULL DEFAULT 'rgba(255, 107, 0, 0.15)',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
@@ -195,6 +266,20 @@ CREATE TABLE IF NOT EXISTS public.logos_nav (
     id BIGSERIAL PRIMARY KEY,
     logo VARCHAR(500) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+-- 13b. TABLA: Botones del Nav (agregar/editar/eliminar, colores)
+CREATE TABLE IF NOT EXISTS public.botones_nav (
+    id BIGSERIAL PRIMARY KEY,
+    texto VARCHAR(100) NOT NULL,
+    enlace VARCHAR(255) NOT NULL,
+    color_fondo VARCHAR(20) NOT NULL DEFAULT '#ff6b00',
+    color_texto VARCHAR(20) NOT NULL DEFAULT '#ffffff',
+    color_borde VARCHAR(20) NOT NULL DEFAULT 'transparent',
+    orden INTEGER DEFAULT 0,
+    activo BOOLEAN DEFAULT true,
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
@@ -222,9 +307,13 @@ CREATE TABLE IF NOT EXISTS public.preguntas_frecuentes (
     respuesta TEXT NOT NULL,
     orden INTEGER DEFAULT 0,
     activo BOOLEAN DEFAULT true,
+    color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde preguntas_frecuentes se creó sin la columna `color`
+ALTER TABLE public.preguntas_frecuentes ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '#1a1a1a';
 
 -- 15. TABLA: Pie de Página
 CREATE TABLE IF NOT EXISTS public.pie_pagina (
@@ -236,9 +325,13 @@ CREATE TABLE IF NOT EXISTS public.pie_pagina (
     icono VARCHAR(255),
     columna VARCHAR(50) NOT NULL DEFAULT '1',
     orden INTEGER DEFAULT 0,
+    color VARCHAR(20) NOT NULL DEFAULT '',
     created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
 );
+
+-- Backfill para bases ya existentes donde pie_pagina se creó sin la columna `color`
+ALTER TABLE public.pie_pagina ADD COLUMN IF NOT EXISTS color VARCHAR(20) NOT NULL DEFAULT '';
 
 -- 16. TABLA: Subtítulos de Secciones
 CREATE TABLE IF NOT EXISTS public.secciones_subtitulos (
@@ -278,15 +371,15 @@ INSERT INTO public.preguntas_frecuentes (pregunta, respuesta, orden, activo) VAL
 ('¿Cuentan con parqueadero disponible?', 'El centro de eventos dispone de un amplio parqueadero vigilado para los asistentes. Recomendamos llegar con anticipación para asegurar tu lugar o utilizar servicios de transporte.', 3, true)
 ON CONFLICT DO NOTHING;
 
+-- Nota: la columna 2 ("Acerca de") ya no guarda los enlaces individuales acá — esos
+-- se toman en vivo de menu_navegacion (el mismo menú del nav). Solo se guarda el
+-- encabezado de la columna.
 INSERT INTO public.pie_pagina (tipo, titulo, contenido, url, icono, columna, orden) VALUES
 ('texto', 'Sazón Córdoba', 'Una experiencia gastronómica sin igual en el corazón de Montería.', NULL, NULL, '1', 0),
 ('red_social', NULL, NULL, '#', 'ph-facebook-logo', '1', 1),
 ('red_social', NULL, NULL, '#', 'ph-instagram-logo', '1', 2),
 ('red_social', NULL, NULL, '#', 'ph-youtube-logo', '1', 3),
 ('enlace', 'Acerca de', NULL, '#about', NULL, '2', 0),
-('enlace', 'Invitados', NULL, '#chefs', NULL, '2', 1),
-('enlace', 'Platillos', NULL, '#dishes', NULL, '2', 2),
-('enlace', 'Agenda', NULL, '#itinerary', NULL, '2', 3),
 ('texto', 'Contacto', 'Centro de Eventos, Montería', NULL, 'ph-map-pin', '3', 0),
 ('texto', 'Contacto', 'info@sazoncordoba.com', NULL, 'ph-envelope-simple', '3', 1),
 ('texto', 'Contacto', '+57 300 123 4567', NULL, 'ph-phone', '3', 2)
@@ -300,11 +393,47 @@ INSERT INTO public.secciones_subtitulos (seccion, titulo, subtitulo) VALUES
 ON CONFLICT (seccion) DO NOTHING;
 
 INSERT INTO public.configuraciones_sitio (clave, valor) VALUES
-('reservar_url', '#itinerary'),
-('reservar_texto', 'Reservar Ahora'),
-('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.')
+('footer_copyright', '&copy; 2026 Cámara de Comercio de Montería. Todos los derechos reservados.'),
+('color_nav_fondo', '#000000'),
+('color_footer_fondo', '#020202'),
+('color_footer_texto', ''),
+('mostrar_identidad', '1'),
+('mostrar_about', '1'),
+('mostrar_chefs', '1'),
+('mostrar_platillos', '1'),
+('mostrar_itinerario', '1'),
+('mostrar_sponsors', '1'),
+('mostrar_faq', '1')
 ON CONFLICT (clave) DO NOTHING;
 
 INSERT INTO public.logos_nav (logo, activo) VALUES
 ('img/logos/logosason.jpg', true)
 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.botones_nav (texto, enlace, color_fondo, color_texto, color_borde, orden, activo) VALUES
+('Reservar Ahora', '#itinerary', '#ff6b00', '#ffffff', 'transparent', 0, true),
+('Ingresar', 'api/admin/login.php', 'transparent', '#ffffff', '#ff6b00', 1, true)
+ON CONFLICT DO NOTHING;
+
+-- 17. TABLA: Secciones Dinámicas (constructor de secciones por bloques)
+CREATE TABLE IF NOT EXISTS public.secciones_dinamicas (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    insertar_despues VARCHAR(50) NOT NULL,
+    orden INTEGER DEFAULT 0,
+    activo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+-- 18. TABLA: Bloques Dinámicos (contenido de cada sección dinámica)
+CREATE TABLE IF NOT EXISTS public.bloques_dinamicos (
+    id BIGSERIAL PRIMARY KEY,
+    seccion_id BIGINT NOT NULL REFERENCES secciones_dinamicas(id) ON DELETE CASCADE,
+    tipo VARCHAR(30) NOT NULL,
+    posicion VARCHAR(20) NOT NULL DEFAULT 'completo',
+    contenido TEXT NOT NULL,
+    orden INTEGER DEFAULT 0,
+    created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW()
+);

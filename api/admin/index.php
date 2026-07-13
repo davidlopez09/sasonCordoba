@@ -11,6 +11,39 @@ $db = getDB();
 
 function jsonResponse($data) { echo json_encode($data, JSON_UNESCAPED_UNICODE); exit; }
 
+function resolveImgSrc(?string $path): string {
+    if (!$path) return '';
+    return preg_match('#^https?://#', $path) ? $path : "../../$path";
+}
+
+function handleImageUpload(string $fieldName, string $bucket, string $prefix): ?string {
+    if (empty($_FILES[$fieldName]) || $_FILES[$fieldName]['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+    if ($_FILES[$fieldName]['error'] !== UPLOAD_ERR_OK) {
+        jsonResponse(['error' => 'Error al subir el archivo']);
+    }
+    $file = $_FILES[$fieldName];
+    if ($file['size'] > 2 * 1024 * 1024) {
+        jsonResponse(['error' => 'La imagen no debe superar 2MB']);
+    }
+    $allowed = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'svg' => 'image/svg+xml'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!isset($allowed[$ext])) {
+        jsonResponse(['error' => 'Formato no permitido. Usa JPG, PNG, WEBP o SVG']);
+    }
+    $mime = mime_content_type($file['tmp_name']);
+    if ($ext !== 'svg' && $mime !== $allowed[$ext]) {
+        jsonResponse(['error' => 'El archivo no es una imagen válida']);
+    }
+    $filename = $prefix . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+    try {
+        return uploadToSupabaseStorage($bucket, $filename, $file['tmp_name'], $allowed[$ext]);
+    } catch (Exception $e) {
+        jsonResponse(['error' => 'No se pudo subir el archivo: ' . $e->getMessage()]);
+    }
+}
+
 function ordenCount(PDO $db, string $table, ?string $groupCol, $groupVal): int {
     if ($groupCol) {
         $stmt = $db->prepare("SELECT COUNT(*) FROM $table WHERE $groupCol = ?");
@@ -65,17 +98,21 @@ function ordenShiftForMove(PDO $db, string $table, ?string $groupCol, $oldGroupV
 }
 
 $orderTables = [
-    'slide' => ['table' => 'banner_principal', 'group' => null],
-    'estadistica' => ['table' => 'estadisticas_principales', 'group' => null],
-    'caracteristica' => ['table' => 'caracteristicas_about', 'group' => null],
-    'exponente' => ['table' => 'exponentes', 'group' => null],
-    'platillo' => ['table' => 'platillos_destacados', 'group' => null],
+    'slides' => ['table' => 'banner_principal', 'group' => null],
+    'estadisticas' => ['table' => 'estadisticas_principales', 'group' => null],
+    'caracteristicas' => ['table' => 'caracteristicas_about', 'group' => null],
+    'exponentes' => ['table' => 'exponentes', 'group' => null],
+    'platillos' => ['table' => 'platillos_destacados', 'group' => null],
     'itinerario' => ['table' => 'itinerario_items', 'group' => null],
-    'patrocinador' => ['table' => 'patrocinadores', 'group' => null],
+    'patrocinadores' => ['table' => 'patrocinadores', 'group' => null],
     'badges' => ['table' => 'badges_identidad', 'group' => null],
     'menu_nav' => ['table' => 'menu_navegacion', 'group' => null],
+    'botones_nav' => ['table' => 'botones_nav', 'group' => null],
+    'botones_hero' => ['table' => 'botones_hero', 'group' => null],
     'faq' => ['table' => 'preguntas_frecuentes', 'group' => null],
     'footer' => ['table' => 'pie_pagina', 'group' => 'columna'],
+    'secciones_dinamicas' => ['table' => 'secciones_dinamicas', 'group' => null],
+    'bloques_dinamicos' => ['table' => 'bloques_dinamicos', 'group' => 'seccion_id'],
 ];
 
 $action = $_GET['action'] ?? '';
@@ -126,32 +163,130 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
             }
         }
 
-        if ($action === 'add_nav' || $action === 'edit_nav') {
-            $logoUrl = null;
+        if ($action === 'add_exponentes' || $action === 'edit_exponentes') {
+            $fotoUrl = handleImageUpload('foto', 'exponentes_fotos', 'exponente');
+            $instagram = $_POST['instagram_url'] !== '' ? $_POST['instagram_url'] : null;
+            $twitter = $_POST['twitter_url'] !== '' ? $_POST['twitter_url'] : null;
 
-            if (!empty($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES['logo'];
-                if ($file['size'] > 2 * 1024 * 1024) {
-                    jsonResponse(['error' => 'La imagen no debe superar 2MB']);
+            if ($action === 'edit_exponentes') {
+                $current = $db->prepare('SELECT foto FROM exponentes WHERE id = ?');
+                $current->execute([$_POST['id']]);
+                $oldFoto = $current->fetchColumn();
+
+                if ($fotoUrl && $oldFoto) {
+                    deleteFromSupabaseStorage('exponentes_fotos', $oldFoto);
                 }
-                $allowed = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'svg' => 'image/svg+xml'];
-                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                if (!isset($allowed[$ext])) {
-                    jsonResponse(['error' => 'Formato no permitido. Usa JPG, PNG, WEBP o SVG']);
+
+                $stmt = $db->prepare('UPDATE exponentes SET nombre=?, especialidad=?, foto=?, instagram_url=?, twitter_url=?, orden=?, color=? WHERE id=?');
+                $stmt->execute([$_POST['nombre'], $_POST['especialidad'], $fotoUrl ?: $oldFoto, $instagram, $twitter, $_POST['orden'], $_POST['color'] ?? '#1a1a1a', $_POST['id']]);
+            } else {
+                if (!$fotoUrl) {
+                    jsonResponse(['error' => 'Debés subir una foto']);
                 }
-                $mime = mime_content_type($file['tmp_name']);
-                if ($ext !== 'svg' && $mime !== $allowed[$ext]) {
-                    jsonResponse(['error' => 'El archivo no es una imagen válida']);
-                }
-                $filename = 'nav_logo_' . bin2hex(random_bytes(6)) . '.' . $ext;
-                try {
-                    $logoUrl = uploadToSupabaseStorage('logo_nav', $filename, $file['tmp_name'], $allowed[$ext]);
-                } catch (Exception $e) {
-                    jsonResponse(['error' => 'No se pudo subir el archivo: ' . $e->getMessage()]);
-                }
-            } elseif (!empty($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
-                jsonResponse(['error' => 'Error al subir el archivo']);
+                $stmt = $db->prepare('INSERT INTO exponentes (nombre, especialidad, foto, instagram_url, twitter_url, orden, color) VALUES (?,?,?,?,?,?,?)');
+                $stmt->execute([$_POST['nombre'], $_POST['especialidad'], $fotoUrl, $instagram, $twitter, $_POST['orden'], $_POST['color'] ?? '#1a1a1a']);
             }
+            jsonResponse(['ok' => true]);
+        }
+
+        if ($action === 'add_bloques_dinamicos' || $action === 'edit_bloques_dinamicos') {
+            $tipo = $_POST['tipo'] ?? '';
+            $decoded = json_decode($_POST['contenido'] ?? '{}', true) ?: [];
+
+            if ($tipo === 'imagen') {
+                $imgUrl = handleImageUpload('imagen_file', 'secciones_dinamicas', 'bloque');
+                $oldUrl = null;
+                if ($action === 'edit_bloques_dinamicos') {
+                    $current = $db->prepare('SELECT contenido FROM bloques_dinamicos WHERE id = ?');
+                    $current->execute([$_POST['id']]);
+                    $oldContenido = json_decode($current->fetchColumn() ?: '{}', true);
+                    $oldUrl = $oldContenido['url'] ?? null;
+                }
+                if ($imgUrl) {
+                    if ($oldUrl) {
+                        deleteFromSupabaseStorage('secciones_dinamicas', $oldUrl);
+                    }
+                    $decoded['url'] = $imgUrl;
+                } elseif ($oldUrl) {
+                    $decoded['url'] = $oldUrl;
+                }
+            }
+
+            $contenidoJson = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+            $posicion = $_POST['posicion'] ?? 'completo';
+
+            if ($action === 'add_bloques_dinamicos') {
+                $stmt = $db->prepare('INSERT INTO bloques_dinamicos (seccion_id, tipo, posicion, contenido, orden) VALUES (?,?,?,?,?)');
+                $stmt->execute([$_POST['seccion_id'], $tipo, $posicion, $contenidoJson, $_POST['orden']]);
+            } else {
+                $stmt = $db->prepare('UPDATE bloques_dinamicos SET seccion_id=?, tipo=?, posicion=?, contenido=?, orden=? WHERE id=?');
+                $stmt->execute([$_POST['seccion_id'], $tipo, $posicion, $contenidoJson, $_POST['orden'], $_POST['id']]);
+            }
+            jsonResponse(['ok' => true]);
+        }
+
+        if ($action === 'add_platillos' || $action === 'edit_platillos') {
+            $imagenUrl = handleImageUpload('imagen', 'platillos_fotos', 'platillo');
+
+            if ($action === 'edit_platillos') {
+                $current = $db->prepare('SELECT imagen FROM platillos_destacados WHERE id = ?');
+                $current->execute([$_POST['id']]);
+                $oldImagen = $current->fetchColumn();
+
+                if ($imagenUrl && $oldImagen) {
+                    deleteFromSupabaseStorage('platillos_fotos', $oldImagen);
+                }
+
+                $stmt = $db->prepare('UPDATE platillos_destacados SET nombre=?, descripcion=?, imagen=?, orden=?, color=? WHERE id=?');
+                $stmt->execute([$_POST['nombre'], $_POST['descripcion'], $imagenUrl ?: $oldImagen, $_POST['orden'], $_POST['color'] ?? '#ffffff', $_POST['id']]);
+            } else {
+                if (!$imagenUrl) {
+                    jsonResponse(['error' => 'Debés subir una imagen']);
+                }
+                $stmt = $db->prepare('INSERT INTO platillos_destacados (nombre, descripcion, imagen, orden, color) VALUES (?,?,?,?,?)');
+                $stmt->execute([$_POST['nombre'], $_POST['descripcion'], $imagenUrl, $_POST['orden'], $_POST['color'] ?? '#ffffff']);
+            }
+            jsonResponse(['ok' => true]);
+        }
+
+        if ($action === 'add_patrocinadores' || $action === 'edit_patrocinadores') {
+            $logoUrl = handleImageUpload('logo', 'logo_patrocinador', 'patrocinador');
+
+            if ($action === 'edit_patrocinadores') {
+                $current = $db->prepare('SELECT logo FROM patrocinadores WHERE id = ?');
+                $current->execute([$_POST['id']]);
+                $oldLogo = $current->fetchColumn();
+
+                if ($logoUrl && $oldLogo) {
+                    deleteFromSupabaseStorage('logo_patrocinador', $oldLogo);
+                }
+
+                $stmt = $db->prepare('UPDATE patrocinadores SET nombre=?, logo=?, url=?, orden=? WHERE id=?');
+                $stmt->execute([$_POST['nombre'], $logoUrl ?: $oldLogo, $_POST['url'] ?: null, $_POST['orden'], $_POST['id']]);
+            } else {
+                if (!$logoUrl) {
+                    jsonResponse(['error' => 'Debés subir un logo']);
+                }
+                $stmt = $db->prepare('INSERT INTO patrocinadores (nombre, logo, url, orden) VALUES (?,?,?,?)');
+                $stmt->execute([$_POST['nombre'], $logoUrl, $_POST['url'] ?: null, $_POST['orden']]);
+            }
+            jsonResponse(['ok' => true]);
+        }
+
+        if ($action === 'save_about') {
+            $imagenUrl = handleImageUpload('imagen', 'image_nosotros', 'about');
+            if ($imagenUrl) {
+                $stmt = $db->prepare('UPDATE secciones_about SET imagen=?, titulo=?, descripcion=?, color=? WHERE id=?');
+                $stmt->execute([$imagenUrl, $_POST['titulo'] ?? '', $_POST['descripcion'] ?? '', $_POST['color'] ?? '#1a1a1a', $_POST['id']]);
+            } else {
+                $stmt = $db->prepare('UPDATE secciones_about SET titulo=?, descripcion=?, color=? WHERE id=?');
+                $stmt->execute([$_POST['titulo'] ?? '', $_POST['descripcion'] ?? '', $_POST['color'] ?? '#1a1a1a', $_POST['id']]);
+            }
+            jsonResponse(['ok' => true]);
+        }
+
+        if ($action === 'add_nav' || $action === 'edit_nav') {
+            $logoUrl = handleImageUpload('logo', 'logo_nav', 'nav_logo');
 
             if ($action === 'add_nav') {
                 if (!$logoUrl) {
@@ -187,50 +322,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
         }
 
         $actions = [
-            'add_slide' => ['INSERT INTO banner_principal (imagen, texto_badge, titulo, subtitulo, activo, orden) VALUES (?,?,?,?,?,?)', ['imagen','texto_badge','titulo','subtitulo','activo','orden']],
-            'edit_slide' => ['UPDATE banner_principal SET imagen=?, texto_badge=?, titulo=?, subtitulo=?, activo=?, orden=? WHERE id=?', ['imagen','texto_badge','titulo','subtitulo','activo','orden','id']],
-            'delete_slide' => ['DELETE FROM banner_principal WHERE id=?', ['id']],
-            'add_estadistica' => ['INSERT INTO estadisticas_principales (numero, etiqueta, icono, orden) VALUES (?,?,?,?)', ['numero','etiqueta','icono','orden']],
-            'edit_estadistica' => ['UPDATE estadisticas_principales SET numero=?, etiqueta=?, icono=?, orden=? WHERE id=?', ['numero','etiqueta','icono','orden','id']],
-            'delete_estadistica' => ['DELETE FROM estadisticas_principales WHERE id=?', ['id']],
-            'save_about' => ['UPDATE secciones_about SET imagen=?, titulo=?, descripcion=? WHERE id=?', ['imagen','titulo','descripcion','id']],
-            'add_caracteristica' => ['INSERT INTO caracteristicas_about (icono, titulo, descripcion, orden) VALUES (?,?,?,?)', ['icono','titulo','descripcion','orden']],
-            'edit_caracteristica' => ['UPDATE caracteristicas_about SET icono=?, titulo=?, descripcion=?, orden=? WHERE id=?', ['icono','titulo','descripcion','orden','id']],
-            'delete_caracteristica' => ['DELETE FROM caracteristicas_about WHERE id=?', ['id']],
-            'add_exponente' => ['INSERT INTO exponentes (nombre, especialidad, foto, instagram_url, twitter_url, orden) VALUES (?,?,?,?,?,?)', ['nombre','especialidad','foto','instagram_url','twitter_url','orden']],
-            'edit_exponente' => ['UPDATE exponentes SET nombre=?, especialidad=?, foto=?, instagram_url=?, twitter_url=?, orden=? WHERE id=?', ['nombre','especialidad','foto','instagram_url','twitter_url','orden','id']],
-            'delete_exponente' => ['DELETE FROM exponentes WHERE id=?', ['id']],
-            'add_platillo' => ['INSERT INTO platillos_destacados (nombre, descripcion, imagen, orden) VALUES (?,?,?,?)', ['nombre','descripcion','imagen','orden']],
-            'edit_platillo' => ['UPDATE platillos_destacados SET nombre=?, descripcion=?, imagen=?, orden=? WHERE id=?', ['nombre','descripcion','imagen','orden','id']],
-            'delete_platillo' => ['DELETE FROM platillos_destacados WHERE id=?', ['id']],
-            'add_itinerario' => ['INSERT INTO itinerario_items (hora, dia, titulo, nombre_chef, descripcion, orden) VALUES (?,?,?,?,?,?)', ['hora','dia','titulo','nombre_chef','descripcion','orden']],
-            'edit_itinerario' => ['UPDATE itinerario_items SET hora=?, dia=?, titulo=?, nombre_chef=?, descripcion=?, orden=? WHERE id=?', ['hora','dia','titulo','nombre_chef','descripcion','orden','id']],
+            'add_slides' => ['INSERT INTO banner_principal (imagen, activo, orden) VALUES (?,?,?)', ['imagen','activo','orden']],
+            'edit_slides' => ['UPDATE banner_principal SET imagen=?, activo=?, orden=? WHERE id=?', ['imagen','activo','orden','id']],
+            'delete_slides' => ['DELETE FROM banner_principal WHERE id=?', ['id']],
+            'add_estadisticas' => ['INSERT INTO estadisticas_principales (numero, etiqueta, icono, orden, color) VALUES (?,?,?,?,?)', ['numero','etiqueta','icono','orden','color']],
+            'edit_estadisticas' => ['UPDATE estadisticas_principales SET numero=?, etiqueta=?, icono=?, orden=?, color=? WHERE id=?', ['numero','etiqueta','icono','orden','color','id']],
+            'delete_estadisticas' => ['DELETE FROM estadisticas_principales WHERE id=?', ['id']],
+            'save_hero_texto' => ['UPDATE hero_texto SET texto_badge=?, titulo=?, subtitulo=?, color=? WHERE id=?', ['texto_badge','titulo','subtitulo','color','id']],
+            'add_caracteristicas' => ['INSERT INTO caracteristicas_about (icono, titulo, descripcion, orden, color) VALUES (?,?,?,?,?)', ['icono','titulo','descripcion','orden','color']],
+            'edit_caracteristicas' => ['UPDATE caracteristicas_about SET icono=?, titulo=?, descripcion=?, orden=?, color=? WHERE id=?', ['icono','titulo','descripcion','orden','color','id']],
+            'delete_caracteristicas' => ['DELETE FROM caracteristicas_about WHERE id=?', ['id']],
+            'delete_exponentes' => ['DELETE FROM exponentes WHERE id=?', ['id']],
+            'delete_platillos' => ['DELETE FROM platillos_destacados WHERE id=?', ['id']],
+            'add_itinerario' => ['INSERT INTO itinerario_items (hora, dia, titulo, nombre_chef, descripcion, orden, color, color_fondo, color_borde) VALUES (?,?,?,?,?,?,?,?,?)', ['hora','dia','titulo','nombre_chef','descripcion','orden','color','color_fondo','color_borde']],
+            'edit_itinerario' => ['UPDATE itinerario_items SET hora=?, dia=?, titulo=?, nombre_chef=?, descripcion=?, orden=?, color=?, color_fondo=?, color_borde=? WHERE id=?', ['hora','dia','titulo','nombre_chef','descripcion','orden','color','color_fondo','color_borde','id']],
             'delete_itinerario' => ['DELETE FROM itinerario_items WHERE id=?', ['id']],
-            'add_patrocinador' => ['INSERT INTO patrocinadores (nombre, logo, url, orden) VALUES (?,?,?,?)', ['nombre','logo','url','orden']],
-            'edit_patrocinador' => ['UPDATE patrocinadores SET nombre=?, logo=?, url=?, orden=? WHERE id=?', ['nombre','logo','url','orden','id']],
-            'delete_patrocinador' => ['DELETE FROM patrocinadores WHERE id=?', ['id']],
+            'delete_patrocinadores' => ['DELETE FROM patrocinadores WHERE id=?', ['id']],
             // Identidad
-            'save_identidad' => ['UPDATE seccion_identidad SET titulo=?, descripcion=?, activo=? WHERE id=?', ['titulo','descripcion','activo','id']],
+            'save_identidad' => ['UPDATE seccion_identidad SET titulo=?, descripcion=?, activo=?, color=? WHERE id=?', ['titulo','descripcion','activo','color','id']],
             // Badges
-            'add_badges' => ['INSERT INTO badges_identidad (texto, orden) VALUES (?,?)', ['texto','orden']],
-            'edit_badges' => ['UPDATE badges_identidad SET texto=?, orden=? WHERE id=?', ['texto','orden','id']],
+            'add_badges' => ['INSERT INTO badges_identidad (texto, orden, color, color_fondo) VALUES (?,?,?,?)', ['texto','orden','color','color_fondo']],
+            'edit_badges' => ['UPDATE badges_identidad SET texto=?, orden=?, color=?, color_fondo=? WHERE id=?', ['texto','orden','color','color_fondo','id']],
             'delete_badges' => ['DELETE FROM badges_identidad WHERE id=?', ['id']],
             // Menu Nav
             'add_menu_nav' => ['INSERT INTO menu_navegacion (etiqueta, enlace, orden, activo, color) VALUES (?,?,?,?,?)', ['etiqueta','enlace','orden','activo','color']],
             'edit_menu_nav' => ['UPDATE menu_navegacion SET etiqueta=?, enlace=?, orden=?, activo=?, color=? WHERE id=?', ['etiqueta','enlace','orden','activo','color','id']],
             'delete_menu_nav' => ['DELETE FROM menu_navegacion WHERE id=?', ['id']],
+            // Botones Nav
+            'add_botones_nav' => ['INSERT INTO botones_nav (texto, enlace, color_fondo, color_texto, color_borde, orden, activo) VALUES (?,?,?,?,?,?,?)', ['texto','enlace','color_fondo','color_texto','color_borde','orden','activo']],
+            'edit_botones_nav' => ['UPDATE botones_nav SET texto=?, enlace=?, color_fondo=?, color_texto=?, color_borde=?, orden=?, activo=? WHERE id=?', ['texto','enlace','color_fondo','color_texto','color_borde','orden','activo','id']],
+            'delete_botones_nav' => ['DELETE FROM botones_nav WHERE id=?', ['id']],
+            // Botones Hero
+            'add_botones_hero' => ['INSERT INTO botones_hero (texto, enlace, color_fondo, color_texto, color_borde, orden, activo) VALUES (?,?,?,?,?,?,?)', ['texto','enlace','color_fondo','color_texto','color_borde','orden','activo']],
+            'edit_botones_hero' => ['UPDATE botones_hero SET texto=?, enlace=?, color_fondo=?, color_texto=?, color_borde=?, orden=?, activo=? WHERE id=?', ['texto','enlace','color_fondo','color_texto','color_borde','orden','activo','id']],
+            'delete_botones_hero' => ['DELETE FROM botones_hero WHERE id=?', ['id']],
             // FAQ
-            'add_faq' => ['INSERT INTO preguntas_frecuentes (pregunta, respuesta, orden, activo) VALUES (?,?,?,?)', ['pregunta','respuesta','orden','activo']],
-            'edit_faq' => ['UPDATE preguntas_frecuentes SET pregunta=?, respuesta=?, orden=?, activo=? WHERE id=?', ['pregunta','respuesta','orden','activo','id']],
+            'add_faq' => ['INSERT INTO preguntas_frecuentes (pregunta, respuesta, orden, activo, color) VALUES (?,?,?,?,?)', ['pregunta','respuesta','orden','activo','color']],
+            'edit_faq' => ['UPDATE preguntas_frecuentes SET pregunta=?, respuesta=?, orden=?, activo=?, color=? WHERE id=?', ['pregunta','respuesta','orden','activo','color','id']],
             'delete_faq' => ['DELETE FROM preguntas_frecuentes WHERE id=?', ['id']],
             // Footer
-            'add_footer' => ['INSERT INTO pie_pagina (tipo, titulo, contenido, url, icono, columna, orden) VALUES (?,?,?,?,?,?,?)', ['tipo','titulo','contenido','url','icono','columna','orden']],
-            'edit_footer' => ['UPDATE pie_pagina SET tipo=?, titulo=?, contenido=?, url=?, icono=?, columna=?, orden=? WHERE id=?', ['tipo','titulo','contenido','url','icono','columna','orden','id']],
+            'add_footer' => ['INSERT INTO pie_pagina (tipo, titulo, contenido, url, icono, columna, orden, color) VALUES (?,?,?,?,?,?,?,?)', ['tipo','titulo','contenido','url','icono','columna','orden','color']],
+            'edit_footer' => ['UPDATE pie_pagina SET tipo=?, titulo=?, contenido=?, url=?, icono=?, columna=?, orden=?, color=? WHERE id=?', ['tipo','titulo','contenido','url','icono','columna','orden','color','id']],
             'delete_footer' => ['DELETE FROM pie_pagina WHERE id=?', ['id']],
             // Subtítulos
-            'save_subtitulo' => ['UPDATE secciones_subtitulos SET titulo=?, subtitulo=? WHERE id=?', ['titulo','subtitulo','id']],
+            'save_subtitulo' => ['UPDATE secciones_subtitulos SET titulo=?, subtitulo=?, color=? WHERE id=?', ['titulo','subtitulo','color','id']],
             // Configuraciones
             'save_config' => ['UPDATE configuraciones_sitio SET valor=? WHERE clave=?', ['valor','clave']],
+            // Secciones Dinámicas
+            'add_secciones_dinamicas' => ['INSERT INTO secciones_dinamicas (nombre, insertar_despues, orden, activo) VALUES (?,?,?,?)', ['nombre','insertar_despues','orden','activo']],
+            'edit_secciones_dinamicas' => ['UPDATE secciones_dinamicas SET nombre=?, insertar_despues=?, orden=?, activo=? WHERE id=?', ['nombre','insertar_despues','orden','activo','id']],
+            'delete_secciones_dinamicas' => ['DELETE FROM secciones_dinamicas WHERE id=?', ['id']],
+            'delete_bloques_dinamicos' => ['DELETE FROM bloques_dinamicos WHERE id=?', ['id']],
         ];
 
         if (isset($actions[$action])) {
@@ -263,6 +405,12 @@ if (!$about) {
     $about = $db->query('SELECT * FROM secciones_about LIMIT 1')->fetch();
 }
 
+$hero_texto = $db->query('SELECT * FROM hero_texto LIMIT 1')->fetch();
+if (!$hero_texto) {
+    $db->query("INSERT INTO hero_texto (texto_badge, titulo, subtitulo) VALUES ('Edición 2026', 'El Sabor que Enciende a Montería', 'Descubre el evento culinario más prestigioso de la región.')");
+    $hero_texto = $db->query('SELECT * FROM hero_texto LIMIT 1')->fetch();
+}
+
 // Nuevas secciones
 $identidad = $db->query('SELECT * FROM seccion_identidad LIMIT 1')->fetch();
 if (!$identidad) {
@@ -272,35 +420,98 @@ if (!$identidad) {
 $badges = $db->query('SELECT * FROM badges_identidad ORDER BY orden')->fetchAll();
 $logos_nav = $db->query('SELECT * FROM logos_nav ORDER BY id')->fetchAll();
 $menu_nav = $db->query('SELECT * FROM menu_navegacion ORDER BY orden')->fetchAll();
+$botones_nav = $db->query('SELECT * FROM botones_nav ORDER BY orden')->fetchAll();
+$botones_hero = $db->query('SELECT * FROM botones_hero ORDER BY orden')->fetchAll();
 $faq_items = $db->query('SELECT * FROM preguntas_frecuentes ORDER BY orden')->fetchAll();
 $footer_items = $db->query('SELECT * FROM pie_pagina ORDER BY columna, orden')->fetchAll();
 $subtitulos = $db->query('SELECT * FROM secciones_subtitulos ORDER BY seccion')->fetchAll();
 $configs = $db->query('SELECT id, clave, valor FROM configuraciones_sitio ORDER BY clave')->fetchAll();
+
+$secciones_dinamicas = $db->query('SELECT * FROM secciones_dinamicas ORDER BY orden')->fetchAll();
+foreach ($secciones_dinamicas as &$sd) {
+    $stmtB = $db->prepare('SELECT * FROM bloques_dinamicos WHERE seccion_id = ? ORDER BY orden');
+    $stmtB->execute([$sd['id']]);
+    $sd['bloques'] = $stmtB->fetchAll();
+}
+unset($sd);
 $configMap = [];
 foreach ($configs as $c) { $configMap[$c['clave']] = $c['valor']; }
 
+$navFondo = null;
+foreach ($configs as $c) { if ($c['clave'] === 'color_nav_fondo') { $navFondo = $c; break; } }
+if (!$navFondo) {
+    $db->prepare("INSERT INTO configuraciones_sitio (clave, valor) VALUES ('color_nav_fondo', '#000000')")->execute();
+    $navFondo = $db->query("SELECT id, clave, valor FROM configuraciones_sitio WHERE clave = 'color_nav_fondo'")->fetch();
+}
+
+$footerFondo = null;
+$footerTexto = null;
+foreach ($configs as $c) {
+    if ($c['clave'] === 'color_footer_fondo') { $footerFondo = $c; }
+    if ($c['clave'] === 'color_footer_texto') { $footerTexto = $c; }
+}
+if (!$footerFondo) {
+    $db->prepare("INSERT INTO configuraciones_sitio (clave, valor) VALUES ('color_footer_fondo', '#020202')")->execute();
+    $footerFondo = $db->query("SELECT id, clave, valor FROM configuraciones_sitio WHERE clave = 'color_footer_fondo'")->fetch();
+}
+if (!$footerTexto) {
+    $db->prepare("INSERT INTO configuraciones_sitio (clave, valor) VALUES ('color_footer_texto', '')")->execute();
+    $footerTexto = $db->query("SELECT id, clave, valor FROM configuraciones_sitio WHERE clave = 'color_footer_texto'")->fetch();
+}
+
+$seccionesVisibilidadClaves = ['mostrar_identidad', 'mostrar_about', 'mostrar_chefs', 'mostrar_platillos', 'mostrar_itinerario', 'mostrar_sponsors', 'mostrar_faq'];
+$seccionesVisibilidad = [];
+foreach ($seccionesVisibilidadClaves as $clave) {
+    $found = null;
+    foreach ($configs as $c) { if ($c['clave'] === $clave) { $found = $c; break; } }
+    if (!$found) {
+        $db->prepare("INSERT INTO configuraciones_sitio (clave, valor) VALUES (?, '1')")->execute([$clave]);
+        $stmt = $db->prepare("SELECT id, clave, valor FROM configuraciones_sitio WHERE clave = ?");
+        $stmt->execute([$clave]);
+        $found = $stmt->fetch();
+    }
+    $seccionesVisibilidad[] = $found;
+}
+
 $sections = [
     'nav' => ['label' => 'Logos del Nav', 'icon' => 'ph-image', 'rows' => $logos_nav, 'fields' => ['logo', 'activo'], 'can_add' => true],
-    'slides' => ['label' => 'Hero Slides', 'icon' => 'ph-images', 'rows' => $slides, 'fields' => ['imagen','texto_badge','titulo','subtitulo','activo','orden'], 'can_add' => true],
-    'estadisticas' => ['label' => 'Estadísticas', 'icon' => 'ph-chart-bar', 'rows' => $estadisticas, 'fields' => ['numero','etiqueta','icono','orden'], 'can_add' => true],
-    'about' => ['label' => 'Sección About', 'icon' => 'ph-info', 'rows' => [$about], 'fields' => ['imagen','titulo','descripcion'], 'can_add' => false],
-    'caracteristicas' => ['label' => 'Características', 'icon' => 'ph-list-checks', 'rows' => $caracteristicas, 'fields' => ['icono','titulo','descripcion','orden'], 'can_add' => true],
-    'exponentes' => ['label' => 'Exponentes', 'icon' => 'ph-users-three', 'rows' => $exponentes, 'fields' => ['nombre','especialidad','foto','instagram_url','twitter_url','orden'], 'can_add' => true],
-    'platillos' => ['label' => 'Platillos', 'icon' => 'ph-fork-knife', 'rows' => $platillos, 'fields' => ['nombre','descripcion','imagen','orden'], 'can_add' => true],
-    'itinerario' => ['label' => 'Itinerario', 'icon' => 'ph-calendar', 'rows' => $itinerario, 'fields' => ['hora','dia','titulo','nombre_chef','descripcion','orden'], 'can_add' => true],
+    'nav_apariencia' => ['label' => 'Apariencia del Nav', 'icon' => 'ph-palette', 'rows' => [$navFondo], 'fields' => ['valor'], 'can_add' => false],
+    'slides' => ['label' => 'Hero Slides', 'icon' => 'ph-images', 'rows' => $slides, 'fields' => ['imagen','activo','orden'], 'can_add' => true],
+    'hero_texto' => ['label' => 'Texto del Hero', 'icon' => 'ph-text-aa', 'rows' => [$hero_texto], 'fields' => ['texto_badge','titulo','subtitulo','color'], 'can_add' => false],
+    'botones_hero' => ['label' => 'Botones Hero', 'icon' => 'ph-cursor-click', 'rows' => $botones_hero, 'fields' => ['texto','enlace','color_fondo','color_texto','color_borde','orden','activo'], 'can_add' => true],
+    'estadisticas' => ['label' => 'Estadísticas', 'icon' => 'ph-chart-bar', 'rows' => $estadisticas, 'fields' => ['numero','etiqueta','icono','orden','color'], 'can_add' => true],
+    'about' => ['label' => 'Sección About', 'icon' => 'ph-info', 'rows' => [$about], 'fields' => ['imagen','titulo','descripcion','color'], 'can_add' => false],
+    'caracteristicas' => ['label' => 'Características', 'icon' => 'ph-list-checks', 'rows' => $caracteristicas, 'fields' => ['icono','titulo','descripcion','orden','color'], 'can_add' => true],
+    'exponentes' => ['label' => 'Exponentes', 'icon' => 'ph-users-three', 'rows' => $exponentes, 'fields' => ['nombre','especialidad','foto','instagram_url','twitter_url','orden','color'], 'can_add' => true],
+    'platillos' => ['label' => 'Platillos', 'icon' => 'ph-fork-knife', 'rows' => $platillos, 'fields' => ['nombre','descripcion','imagen','orden','color'], 'can_add' => true],
+    'itinerario' => ['label' => 'Itinerario', 'icon' => 'ph-calendar', 'rows' => $itinerario, 'fields' => ['hora','dia','titulo','nombre_chef','descripcion','orden','color','color_fondo','color_borde'], 'can_add' => true],
     'patrocinadores' => ['label' => 'Patrocinadores', 'icon' => 'ph-handshake', 'rows' => $patrocinadores, 'fields' => ['nombre','logo','url','orden'], 'can_add' => true],
-    'identidad' => ['label' => 'Identidad', 'icon' => 'ph-seal-check', 'rows' => [$identidad], 'fields' => ['titulo','descripcion','activo'], 'can_add' => false],
-    'badges' => ['label' => 'Badges Identidad', 'icon' => 'ph-tags', 'rows' => $badges, 'fields' => ['texto','orden'], 'can_add' => true],
+    'identidad' => ['label' => 'Identidad', 'icon' => 'ph-seal-check', 'rows' => [$identidad], 'fields' => ['titulo','descripcion','activo','color'], 'can_add' => false],
+    'badges' => ['label' => 'Badges Identidad', 'icon' => 'ph-tags', 'rows' => $badges, 'fields' => ['texto','orden','color','color_fondo'], 'can_add' => true],
     'menu_nav' => ['label' => 'Menú Nav', 'icon' => 'ph-list', 'rows' => $menu_nav, 'fields' => ['etiqueta','enlace','orden','activo','color'], 'can_add' => true],
-    'faq' => ['label' => 'FAQ', 'icon' => 'ph-question', 'rows' => $faq_items, 'fields' => ['pregunta','respuesta','orden','activo'], 'can_add' => true],
-    'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'rows' => $footer_items, 'fields' => ['tipo','titulo','contenido','url','icono','columna','orden'], 'can_add' => true],
-    'subtitulos' => ['label' => 'Subtítulos', 'icon' => 'ph-text-aa', 'rows' => $subtitulos, 'fields' => ['seccion','titulo','subtitulo'], 'can_add' => false],
+    'botones_nav' => ['label' => 'Botones Nav', 'icon' => 'ph-cursor-click', 'rows' => $botones_nav, 'fields' => ['texto','enlace','color_fondo','color_texto','color_borde','orden','activo'], 'can_add' => true],
+    'faq' => ['label' => 'FAQ', 'icon' => 'ph-question', 'rows' => $faq_items, 'fields' => ['pregunta','respuesta','orden','activo','color'], 'can_add' => true],
+    'footer_apariencia' => ['label' => 'Apariencia del Footer', 'icon' => 'ph-palette', 'rows' => [$footerFondo, $footerTexto], 'fields' => ['clave','valor'], 'can_add' => false],
+    'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'rows' => $footer_items, 'fields' => ['tipo','titulo','contenido','url','icono','columna','orden','color'], 'can_add' => true],
+    'subtitulos' => ['label' => 'Subtítulos', 'icon' => 'ph-text-aa', 'rows' => $subtitulos, 'fields' => ['seccion','titulo','subtitulo','color'], 'can_add' => false],
+    'secciones_visibilidad' => ['label' => 'Secciones del Sitio', 'icon' => 'ph-eye', 'rows' => $seccionesVisibilidad, 'fields' => ['clave','valor'], 'can_add' => false],
     'configuraciones' => ['label' => 'Config', 'icon' => 'ph-gear', 'rows' => $configs, 'fields' => ['clave','valor'], 'can_add' => false],
+    'secciones_dinamicas' => ['label' => 'Secciones Dinámicas', 'icon' => 'ph-squares-four', 'rows' => $secciones_dinamicas, 'fields' => ['nombre','insertar_despues','orden','activo'], 'can_add' => true],
 ];
 
+foreach ($secciones_dinamicas as $sd) {
+    $sections['bloques_' . $sd['id']] = [
+        'label' => 'Bloques: ' . $sd['nombre'],
+        'icon' => 'ph-stack',
+        'rows' => $sd['bloques'],
+        'fields' => ['tipo', 'posicion', 'orden'],
+        'can_add' => true,
+    ];
+}
+
 $groups = [
-    'nav' => ['label' => 'Nav', 'icon' => 'ph-list', 'children' => ['nav', 'menu_nav']],
-    'hero' => ['label' => 'Hero', 'icon' => 'ph-images', 'children' => ['slides', 'estadisticas']],
+    'nav' => ['label' => 'Nav', 'icon' => 'ph-list', 'children' => ['nav', 'nav_apariencia', 'menu_nav', 'botones_nav']],
+    'hero' => ['label' => 'Hero', 'icon' => 'ph-images', 'children' => ['slides', 'hero_texto', 'botones_hero', 'estadisticas']],
     'identidad' => ['label' => 'Identidad', 'icon' => 'ph-seal-check', 'children' => ['identidad', 'badges']],
     'nosotros' => ['label' => 'Sobre Nosotros', 'icon' => 'ph-info', 'children' => ['about', 'caracteristicas']],
     'exponentes' => ['label' => 'Exponentes', 'icon' => 'ph-users-three', 'children' => ['exponentes']],
@@ -308,8 +519,9 @@ $groups = [
     'itinerario' => ['label' => 'Itinerario', 'icon' => 'ph-calendar', 'children' => ['itinerario']],
     'patrocinadores' => ['label' => 'Patrocinadores', 'icon' => 'ph-handshake', 'children' => ['patrocinadores']],
     'faq' => ['label' => 'FAQ', 'icon' => 'ph-question', 'children' => ['faq']],
-    'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'children' => ['footer']],
-    'general' => ['label' => 'General', 'icon' => 'ph-gear', 'children' => ['subtitulos', 'configuraciones']],
+    'footer' => ['label' => 'Footer', 'icon' => 'ph-article', 'children' => ['footer_apariencia', 'footer']],
+    'general' => ['label' => 'General', 'icon' => 'ph-gear', 'children' => ['subtitulos', 'secciones_visibilidad', 'configuraciones']],
+    'dinamicas' => ['label' => 'Secciones Dinámicas', 'icon' => 'ph-squares-four', 'children' => ['secciones_dinamicas']],
 ];
 ?>
 <!DOCTYPE html>
@@ -618,7 +830,6 @@ $groups = [
         <?php endforeach; ?>
     </nav>
     <div class="sidebar-footer">
-        <a href="../index.php"><i class="ph ph-arrow-left"></i> <span>Ver Sitio</span></a>
         <a href="logout.php"><i class="ph ph-sign-out"></i> <span>Cerrar Sesión</span></a>
     </div>
 </aside>
@@ -659,8 +870,8 @@ $groups = [
                         <?php foreach ($sec['fields'] as $f): ?>
                             <td>
                                 <?php if (in_array($f, ['imagen','foto','logo'])): ?>
-                                    <?php if ($row[$f]): ?><img src="<?= htmlspecialchars($row[$f]) ?>" class="img-preview"><?php else: ?>—<?php endif; ?>
-                                <?php elseif (in_array($f, ['color_texto', 'color'])): ?>
+                                    <?php if ($row[$f]): ?><img src="<?= htmlspecialchars(resolveImgSrc($row[$f])) ?>" class="img-preview"><?php else: ?>—<?php endif; ?>
+                                <?php elseif (in_array($f, ['color_texto', 'color', 'color_fondo', 'color_borde'])): ?>
                                     <span style="display:inline-flex; align-items:center; gap:8px;">
                                         <span style="display:inline-block; width:18px; height:18px; border-radius:4px; background:<?= htmlspecialchars($row[$f]) ?>; border:1px solid #e9ecef;"></span>
                                         <?= htmlspecialchars($row[$f]) ?>
@@ -681,7 +892,10 @@ $groups = [
                                     <button class="btn btn-primary btn-sm" onclick="activarLogo(<?= $row['id'] ?>)">Activar</button>
                                     <button class="btn btn-danger btn-sm" onclick="deleteItem('nav',<?= $row['id'] ?>)">Eliminar</button>
                                 <?php endif; ?>
-                            <?php elseif (!in_array($key, ['about','identidad','subtitulos','configuraciones'])): ?>
+                            <?php elseif ($key === 'secciones_dinamicas'): ?>
+                                <button class="btn btn-ghost btn-sm" onclick="showSection('bloques_<?= $row['id'] ?>')">Bloques</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteItem('secciones_dinamicas',<?= $row['id'] ?>)">Eliminar</button>
+                            <?php elseif (!in_array($key, ['about','identidad','subtitulos','configuraciones','hero_texto','nav_apariencia','footer_apariencia','secciones_visibilidad'])): ?>
                                 <button class="btn btn-danger btn-sm" onclick="deleteItem('<?= $key ?>',<?= $row['id'] ?>)">Eliminar</button>
                             <?php endif; ?>
                         </td>
@@ -715,44 +929,56 @@ const fieldConfig = {
     nav: [
         {name:'logo', label:'Logo (imagen)', type:'file'},
     ],
+    nav_apariencia: [
+        {name:'clave', label:'', type:'hidden'},
+        {name:'valor', label:'Color de fondo del Nav', type:'color_text'},
+    ],
     slides: [
         {name:'imagen', label:'URL Imagen', type:'url'},
+        {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+        {name:'orden', label:'Orden', type:'number'},
+    ],
+    hero_texto: [
         {name:'texto_badge', label:'Texto Badge', type:'text'},
         {name:'titulo', label:'Título', type:'text'},
         {name:'subtitulo', label:'Subtítulo', type:'textarea'},
-        {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
-        {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     estadisticas: [
         {name:'numero', label:'Número (ej: 15+)', type:'text'},
         {name:'etiqueta', label:'Etiqueta', type:'text'},
         {name:'icono', label:'Icono (clase Phospor)', type:'text'},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     about: [
-        {name:'imagen', label:'URL Imagen', type:'url'},
+        {name:'imagen', label:'Imagen', type:'file'},
         {name:'titulo', label:'Título', type:'text'},
         {name:'descripcion', label:'Descripción', type:'textarea'},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     caracteristicas: [
         {name:'icono', label:'Icono (clase Phospor)', type:'text'},
         {name:'titulo', label:'Título', type:'text'},
         {name:'descripcion', label:'Descripción', type:'textarea'},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     exponentes: [
         {name:'nombre', label:'Nombre', type:'text'},
         {name:'especialidad', label:'Especialidad', type:'text'},
-        {name:'foto', label:'URL Foto', type:'url'},
-        {name:'instagram_url', label:'Instagram URL', type:'url'},
-        {name:'twitter_url', label:'Twitter URL', type:'url'},
+        {name:'foto', label:'Foto', type:'file'},
+        {name:'instagram_url', label:'Instagram URL (opcional)', type:'url'},
+        {name:'twitter_url', label:'Twitter URL (opcional)', type:'url'},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     platillos: [
         {name:'nombre', label:'Nombre', type:'text'},
         {name:'descripcion', label:'Descripción', type:'textarea'},
-        {name:'imagen', label:'URL Imagen', type:'url'},
+        {name:'imagen', label:'Imagen', type:'file'},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     itinerario: [
         {name:'hora', label:'Hora (ej: 12:00 PM)', type:'text'},
@@ -761,21 +987,27 @@ const fieldConfig = {
         {name:'nombre_chef', label:'Chef', type:'text'},
         {name:'descripcion', label:'Descripción', type:'textarea'},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
+        {name:'color_fondo', label:'Color de fondo de la card', type:'color_text'},
+        {name:'color_borde', label:'Color de borde de la card', type:'color_text'},
     ],
     patrocinadores: [
         {name:'nombre', label:'Nombre', type:'text'},
-        {name:'logo', label:'URL Logo', type:'url'},
-        {name:'url', label:'Sitio Web', type:'url'},
+        {name:'logo', label:'Logo', type:'file'},
+        {name:'url', label:'Sitio Web (opcional)', type:'url'},
         {name:'orden', label:'Orden', type:'number'},
     ],
     identidad: [
         {name:'titulo', label:'Título', type:'text'},
         {name:'descripcion', label:'Descripción', type:'textarea'},
         {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+        {name:'color', label:'Color del texto', type:'color'},
     ],
     badges: [
         {name:'texto', label:'Texto', type:'text'},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto', type:'color'},
+        {name:'color_fondo', label:'Color de fondo', type:'color_text'},
     ],
     menu_nav: [
         {name:'etiqueta', label:'Etiqueta', type:'text'},
@@ -784,11 +1016,34 @@ const fieldConfig = {
         {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
         {name:'color', label:'Color del texto', type:'color'},
     ],
+    botones_nav: [
+        {name:'texto', label:'Texto', type:'text'},
+        {name:'enlace', label:'Enlace (URL o #ancla)', type:'text'},
+        {name:'color_fondo', label:'Color de fondo', type:'color_text'},
+        {name:'color_texto', label:'Color de texto', type:'color'},
+        {name:'color_borde', label:'Color de borde', type:'color_text'},
+        {name:'orden', label:'Orden', type:'number'},
+        {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+    ],
+    botones_hero: [
+        {name:'texto', label:'Texto', type:'text'},
+        {name:'enlace', label:'Enlace (URL o #ancla)', type:'text'},
+        {name:'color_fondo', label:'Color de fondo', type:'color_text'},
+        {name:'color_texto', label:'Color de texto', type:'color'},
+        {name:'color_borde', label:'Color de borde', type:'color_text'},
+        {name:'orden', label:'Orden', type:'number'},
+        {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+    ],
     faq: [
         {name:'pregunta', label:'Pregunta', type:'textarea'},
         {name:'respuesta', label:'Respuesta', type:'textarea'},
         {name:'orden', label:'Orden', type:'number'},
         {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+        {name:'color', label:'Color del texto', type:'color'},
+    ],
+    footer_apariencia: [
+        {name:'clave', label:'', type:'hidden'},
+        {name:'valor', label:'Color', type:'color_text'},
     ],
     footer: [
         {name:'tipo', label:'Tipo', type:'select', options:[{v:'texto',l:'Texto'},{v:'red_social',l:'Red Social'},{v:'enlace',l:'Enlace'}]},
@@ -798,37 +1053,62 @@ const fieldConfig = {
         {name:'icono', label:'Icono (clase Phospor)', type:'text'},
         {name:'columna', label:'Columna', type:'select', options:[{v:'1',l:'Col 1'},{v:'2',l:'Col 2'},{v:'3',l:'Col 3'}]},
         {name:'orden', label:'Orden', type:'number'},
+        {name:'color', label:'Color del texto (vacío = usa el color general del footer)', type:'color_text'},
     ],
     subtitulos: [
         {name:'seccion', label:'Sección (clave)', type:'text'},
         {name:'titulo', label:'Título', type:'text'},
         {name:'subtitulo', label:'Subtítulo', type:'textarea'},
+        {name:'color', label:'Color (vacío = usa el estilo por defecto)', type:'color_text'},
+    ],
+    secciones_visibilidad: [
+        {name:'clave', label:'', type:'hidden'},
+        {name:'valor', label:'Mostrar sección', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
     ],
     configuraciones: [
         {name:'clave', label:'Clave', type:'text'},
         {name:'valor', label:'Valor', type:'text'},
     ],
+    secciones_dinamicas: [
+        {name:'nombre', label:'Nombre', type:'text'},
+        {name:'insertar_despues', label:'Insertar después de', type:'select', options:[
+            {v:'home', l:'Hero'}, {v:'identity', l:'Identidad'}, {v:'about', l:'Sobre Nosotros'},
+            {v:'chefs', l:'Exponentes'}, {v:'dishes', l:'Platillos'}, {v:'itinerary', l:'Itinerario'},
+            {v:'faq', l:'FAQ'}, {v:'sponsors', l:'Patrocinadores'},
+        ]},
+        {name:'orden', label:'Orden', type:'number'},
+        {name:'activo', label:'Activo', type:'select', options:[{v:'1',l:'Sí'},{v:'0',l:'No'}]},
+    ],
 };
 
 const pageTitles = {
-    nav: 'Logos del Nav', slides: 'Hero Slides', estadisticas: 'Estadísticas del Hero', about: 'Sección About',
+    nav: 'Logos del Nav', nav_apariencia: 'Apariencia del Nav', slides: 'Hero Slides', hero_texto: 'Texto del Hero', botones_hero: 'Botones Hero', estadisticas: 'Estadísticas del Hero', about: 'Sección About',
     caracteristicas: 'Características About', exponentes: 'Exponentes (Chefs)',
     platillos: 'Platillos Destacados', itinerario: 'Itinerario', patrocinadores: 'Patrocinadores',
     identidad: 'Sección Identidad', badges: 'Badges Identidad', menu_nav: 'Menú Navegación',
-    faq: 'Preguntas Frecuentes', footer: 'Configuración Footer',
-    subtitulos: 'Subtítulos de Secciones', configuraciones: 'Configuraciones del Sitio'
+    botones_nav: 'Botones Nav',
+    faq: 'Preguntas Frecuentes', footer_apariencia: 'Apariencia del Footer', footer: 'Configuración Footer',
+    subtitulos: 'Subtítulos de Secciones', secciones_visibilidad: 'Secciones del Sitio', configuraciones: 'Configuraciones del Sitio',
+    secciones_dinamicas: 'Secciones Dinámicas',
+    <?php foreach ($secciones_dinamicas as $sd): ?>
+    bloques_<?= $sd['id'] ?>: 'Bloques: <?= addslashes($sd['nombre']) ?>',
+    <?php endforeach; ?>
 };
 
 const canAdd = {
-    nav:true, slides:true, estadisticas:true, about:false, caracteristicas:true,
+    nav:true, nav_apariencia:false, slides:true, hero_texto:false, estadisticas:true, about:false, caracteristicas:true,
     exponentes:true, platillos:true, itinerario:true, patrocinadores:true,
-    identidad:false, badges:true, menu_nav:true, faq:true, footer:true,
-    subtitulos:false, configuraciones:false
+    identidad:false, badges:true, menu_nav:true, botones_nav:true, botones_hero:true, faq:true, footer_apariencia:false, footer:true,
+    subtitulos:false, secciones_visibilidad:false, configuraciones:false,
+    secciones_dinamicas:true,
+    <?php foreach ($secciones_dinamicas as $sd): ?>
+    bloques_<?= $sd['id'] ?>: true,
+    <?php endforeach; ?>
 };
 
 const groups = {
-    nav: { label: 'Nav', children: ['nav', 'menu_nav'] },
-    hero: { label: 'Hero', children: ['slides', 'estadisticas'] },
+    nav: { label: 'Nav', children: ['nav', 'nav_apariencia', 'menu_nav', 'botones_nav'] },
+    hero: { label: 'Hero', children: ['slides', 'hero_texto', 'botones_hero', 'estadisticas'] },
     identidad: { label: 'Identidad', children: ['identidad', 'badges'] },
     nosotros: { label: 'Sobre Nosotros', children: ['about', 'caracteristicas'] },
     exponentes: { label: 'Exponentes', children: ['exponentes'] },
@@ -836,8 +1116,9 @@ const groups = {
     itinerario: { label: 'Itinerario', children: ['itinerario'] },
     patrocinadores: { label: 'Patrocinadores', children: ['patrocinadores'] },
     faq: { label: 'FAQ', children: ['faq'] },
-    footer: { label: 'Footer', children: ['footer'] },
-    general: { label: 'General', children: ['subtitulos', 'configuraciones'] },
+    footer: { label: 'Footer', children: ['footer_apariencia', 'footer'] },
+    general: { label: 'General', children: ['subtitulos', 'secciones_visibilidad', 'configuraciones'] },
+    dinamicas: { label: 'Secciones Dinámicas', children: ['secciones_dinamicas'] },
 };
 
 let currentSection = 'nav';
@@ -873,14 +1154,109 @@ function switchTab(section, btn) {
 }
 
 function showSection(section) {
+    const pageEl = document.getElementById('page-' + section);
+    if (!pageEl) {
+        // La página no existe todavía en el DOM (ej. sección dinámica creada/borrada
+        // sin recargar) — recargamos para que el servidor la regenere.
+        location.reload();
+        return;
+    }
     currentSection = section;
     document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
-    document.getElementById('page-' + section).classList.add('active');
+    pageEl.classList.add('active');
     document.getElementById('pageTitle').textContent = pageTitles[section] || section;
     document.getElementById('btnAdd').style.display = canAdd[section] ? 'inline-flex' : 'none';
 }
 
+const BLOQUE_TIPOS = {
+    texto: [
+        {name:'contenido_titulo', label:'Título', type:'text', key:'titulo'},
+        {name:'contenido_texto', label:'Texto', type:'textarea', key:'texto'},
+        {name:'contenido_color', label:'Color del texto', type:'color', key:'color'},
+    ],
+    imagen: [
+        {name:'imagen_file', label:'Imagen', type:'file', key:'url'},
+    ],
+    boton: [
+        {name:'contenido_texto', label:'Texto del botón', type:'text', key:'texto'},
+        {name:'contenido_enlace', label:'Enlace', type:'text', key:'enlace'},
+        {name:'contenido_color_fondo', label:'Color de fondo', type:'color_text', key:'color_fondo'},
+        {name:'contenido_color_texto', label:'Color de texto', type:'color', key:'color_texto'},
+        {name:'contenido_color_borde', label:'Color de borde', type:'color_text', key:'color_borde'},
+    ],
+    tarjetas: [
+        {name:'contenido_items', label:'Tarjetas (JSON: [{"imagen":"URL","titulo":"...","descripcion":"..."}])', type:'textarea', key:'items', isJson:true},
+    ],
+};
+
+function renderBloqueSubFields(tipo, contenido) {
+    const container = document.getElementById('bloqueSubFields');
+    container.innerHTML = '';
+    (BLOQUE_TIPOS[tipo] || []).forEach(f => {
+        let val = '';
+        if (contenido && f.key) {
+            val = f.isJson ? JSON.stringify(contenido[f.key] || [], null, 2) : (contenido[f.key] ?? '');
+        }
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.innerHTML = `<label>${f.label}</label>`;
+        if (f.type === 'textarea') {
+            div.innerHTML += `<textarea name="${f.name}">${val}</textarea>`;
+        } else if (f.type === 'file') {
+            if (val) div.innerHTML += `<img src="${val}" class="img-preview" style="display:block; margin-bottom:8px;">`;
+            div.innerHTML += `<input type="file" name="${f.name}" accept="image/*">`;
+        } else if (f.type === 'color_text') {
+            const hexVal = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+            div.innerHTML += `<div style="display:flex; gap:8px; align-items:center;">
+                <input type="color" value="${hexVal}" oninput="this.nextElementSibling.value=this.value">
+                <input type="text" name="${f.name}" value="${val}" placeholder='hex o "transparent"' style="flex:1;" oninput="const p=this.previousElementSibling; if(/^#[0-9a-fA-F]{6}$/.test(this.value)) p.value=this.value;">
+            </div>`;
+        } else {
+            div.innerHTML += `<input type="${f.type}" name="${f.name}" value="${val}">`;
+        }
+        container.appendChild(div);
+    });
+}
+
+function openBloqueModal(section, mode, data) {
+    currentSection = section;
+    currentMode = mode;
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalTitle').textContent = mode === 'add' ? 'Agregar bloque' : 'Editar bloque';
+
+    const seccionId = section.replace('bloques_', '');
+    const contenido = data?.contenido ? JSON.parse(data.contenido) : null;
+    const tipoActual = data?.tipo || 'texto';
+
+    const container = document.getElementById('formFields');
+    container.innerHTML = `
+        <input type="hidden" name="seccion_id" value="${seccionId}">
+        <div class="form-group">
+            <label>Tipo de bloque</label>
+            <select name="tipo" id="bloqueTipoSelect" onchange="renderBloqueSubFields(this.value, null)">
+                ${Object.keys(BLOQUE_TIPOS).map(t => `<option value="${t}"${t===tipoActual?' selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Posición</label>
+            <select name="posicion">
+                <option value="completo"${(data?.posicion||'completo')==='completo'?' selected':''}>Completo (ancho completo)</option>
+                <option value="izquierda"${data?.posicion==='izquierda'?' selected':''}>Izquierda</option>
+                <option value="derecha"${data?.posicion==='derecha'?' selected':''}>Derecha</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Orden</label>
+            <input type="number" name="orden" value="${data?.orden ?? (document.querySelectorAll('#page-' + section + ' tbody tr').length + 1)}">
+        </div>
+        <div id="bloqueSubFields"></div>
+    `;
+    renderBloqueSubFields(tipoActual, contenido);
+    document.getElementById('formId').value = data?.id ?? '';
+}
+
 function openModal(section, mode, data = null) {
+    if (section.startsWith('bloques_')) { openBloqueModal(section, mode, data); return; }
     currentSection = section;
     currentMode = mode;
     document.getElementById('modalOverlay').classList.add('active');
@@ -906,8 +1282,12 @@ function openModal(section, mode, data = null) {
                 div.innerHTML += `<img src="${previewSrc}" class="img-preview" style="display:block; margin-bottom:8px;">`;
             }
             div.innerHTML += `<input type="file" name="${f.name}" accept="image/*">`;
-        } else if (section === 'configuraciones' && f.name === 'valor' && data?.clave === 'color_nav_texto') {
-            div.innerHTML += `<input type="color" name="${f.name}" value="${val || '#5a6066'}">`;
+        } else if (f.type === 'color_text') {
+            const hexVal = /^#[0-9a-fA-F]{6}$/.test(val) ? val : '#000000';
+            div.innerHTML += `<div style="display:flex; gap:8px; align-items:center;">
+                <input type="color" value="${hexVal}" oninput="this.nextElementSibling.value=this.value">
+                <input type="text" name="${f.name}" value="${val}" placeholder='hex o "transparent"' style="flex:1;" oninput="const p=this.previousElementSibling; if(/^#[0-9a-fA-F]{6}$/.test(this.value)) p.value=this.value;">
+            </div>`;
         } else {
             div.innerHTML += `<input type="${f.type}" name="${f.name}" value="${val}">`;
         }
@@ -922,8 +1302,24 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
     e.preventDefault();
     showLoader();
     const formData = new FormData(this);
-    const saveActions = { about:'save_about', identidad:'save_identidad', subtitulos:'save_subtitulo', configuraciones:'save_config' };
-    formData.set('action', currentMode === 'add' ? 'add_' + currentSection : (saveActions[currentSection] || 'edit_' + currentSection));
+    const saveActions = { about:'save_about', hero_texto:'save_hero_texto', identidad:'save_identidad', subtitulos:'save_subtitulo', configuraciones:'save_config', nav_apariencia:'save_config', footer_apariencia:'save_config', secciones_visibilidad:'save_config' };
+    const actionSection = currentSection.startsWith('bloques_') ? 'bloques_dinamicos' : currentSection;
+
+    if (actionSection === 'bloques_dinamicos') {
+        const tipo = formData.get('tipo');
+        const contenido = {};
+        (BLOQUE_TIPOS[tipo] || []).forEach(f => {
+            if (!f.key || f.type === 'file') return;
+            let v = formData.get(f.name);
+            if (f.isJson) {
+                try { v = JSON.parse(v || '[]'); } catch (err) { v = []; }
+            }
+            contenido[f.key] = v;
+        });
+        formData.set('contenido', JSON.stringify(contenido));
+    }
+
+    formData.set('action', currentMode === 'add' ? 'add_' + actionSection : (saveActions[currentSection] || 'edit_' + actionSection));
     try {
         const res = await fetch('?action=' + formData.get('action'), { method:'POST', body: formData });
         const data = await res.json();
@@ -934,6 +1330,9 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
                 await Swal.fire({ icon:'success', title:'Guardado', text:'Configuración actualizada.', timer:1500, showConfirmButton:false });
                 closeModal();
                 refreshSection(section);
+            } else if (section === 'secciones_dinamicas' && currentMode === 'add') {
+                await Swal.fire({ icon:'success', title:'Éxito', text:'Guardado correctamente.', timer:1500, showConfirmButton:false });
+                location.reload();
             } else {
                 await Swal.fire({ icon:'success', title:'Éxito', text:'Guardado correctamente.', timer:1500, showConfirmButton:false });
                 closeModal();
@@ -963,14 +1362,18 @@ async function deleteItem(section, id) {
     showLoader();
     const fd = new FormData();
     fd.set('id', id);
-    fd.set('action', 'delete_' + section);
+    fd.set('action', 'delete_' + (section.startsWith('bloques_') ? 'bloques_dinamicos' : section));
     try {
         const res = await fetch('?action=' + fd.get('action'), { method:'POST', body: fd });
         const data = await res.json();
         hideLoader();
         if (data.ok) {
             await Swal.fire({ icon:'success', title:'Eliminado', text:'Registro eliminado.', timer:1500, showConfirmButton:false });
-            refreshSection(section);
+            if (section === 'secciones_dinamicas') {
+                location.reload();
+            } else {
+                refreshSection(section);
+            }
         } else {
             Swal.fire({ icon:'error', title:'Error', text:data.error || 'Ocurrió un error.' });
         }
