@@ -975,6 +975,38 @@ img {
     .dyn-row-2col { flex-direction: column; }
 }
 
+/* Pantallas de PC con poco alto (laptops, ventana no maximizada): el hero
+   con min-height:100vh + contenido apilado se cortaba. Achicamos márgenes
+   y dejamos que la sección se ajuste a su contenido en vez de forzar 100vh. */
+@media (max-height: 750px) and (min-width: 769px) {
+    .hero {
+        min-height: 100vh;
+        padding-top: 100px;
+        padding-bottom: 60px;
+    }
+
+    .hero-title {
+        font-size: 3.4rem;
+        margin-bottom: 20px;
+    }
+
+    .badge {
+        margin-bottom: 18px;
+    }
+
+    .hero-subtitle {
+        margin-bottom: 28px;
+    }
+
+    .hero-actions {
+        margin-bottom: 36px;
+    }
+
+    .hero-stats {
+        padding-top: 28px;
+    }
+}
+
 /* =========================================
    SECCIONES DINÁMICAS
    ========================================= */
