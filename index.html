@@ -5,30 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sazón Córdoba | El Evento Gastronómico del Año</title>
     <meta name="description" content="Descubre Sazón Córdoba, el evento culinario más importante organizado por la Cámara de Comercio de Montería. Ven a degustar platillos increíbles.">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+
     <!-- AOS Animation CSS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    
+
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="./css/style.css?v=14">
-</head>
-<body>
 
-    <!-- Loader -->
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./css/style.css?v=34">
+</head>
+<body class="light-theme">
+
+    <!-- Grain / texture overlay -->
+    <div class="grain-overlay" aria-hidden="true"></div>
+
+    <!-- Scroll progress -->
+    <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+    <!-- Original Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="page-loader-spinner"></div>
     </div>
 
     <!-- Navbar -->
-    <nav id="navbar" class="navbar">
+    <nav id="navbar" class="navbar premium-navbar">
         <div class="nav-container">
             <a href="#home" class="logo">
                 <img alt="Sazón Córdoba" class="brand-logo">
@@ -42,98 +51,139 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Asymmetrical Hero Section with Blobs -->
     <header class="hero" id="home">
+        <!-- Blobs for WoW effect -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+
+        <!-- Background Slider Container -->
         <div class="hero-slider" id="hero-slider"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
-            <div class="badge hero-text" id="hero-badge"></div>
-            <h1 class="hero-title hero-text" id="hero-title"></h1>
-            <p class="hero-subtitle hero-text" id="hero-subtitle"></p>
-            <div class="hero-actions" id="hero-actions"></div>
-            
-            <div class="hero-stats" id="hero-stats"></div>
+        <div class="hero-overlay premium-overlay"></div>
+
+        <div class="hero-container container">
+            <div class="hero-content-left" data-aos="fade-right" data-aos-duration="1200">
+                <div class="badge hero-text" id="hero-badge"></div>
+                <h1 class="hero-title hero-text" id="hero-title"></h1>
+                <p class="hero-subtitle hero-text" id="hero-subtitle"></p>
+                <div class="hero-actions" id="hero-actions"></div>
+                <div class="hero-stats" id="hero-stats"></div>
+            </div>
+        </div>
+
+        <div class="hero-scroll-cue" aria-hidden="true">
+            <span>Desliza</span>
+            <i class="ph ph-arrow-down"></i>
         </div>
     </header>
 
-    <!-- Identity Section -->
-    <section id="identity" class="section section-dark">
-        <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up" id="identity-title"></h2>
-            <div class="section-desc" data-aos="fade-up" data-aos-delay="100" style="max-width: 800px; margin: 0 auto 40px auto; font-size: 1.2rem;" id="identity-desc"></div>
-            <div class="identity-features" data-aos="zoom-in" data-aos-delay="200" id="identity-badges"></div>
+    <!-- Identity Section (Sticky Layout) -->
+    <section id="identity" class="section section-light sticky-section">
+        <div class="container sticky-container">
+            <div class="sticky-content-left" data-aos="fade-right">
+                <span class="eyebrow">Nuestra esencia</span>
+                <h2 class="section-title" id="identity-title"></h2>
+                <div class="section-desc" id="identity-desc"></div>
+            </div>
+            <div class="sticky-content-right" data-aos="fade-left">
+                <div class="identity-features layout-masonry" id="identity-badges"></div>
+            </div>
         </div>
     </section>
 
     <!-- About Section -->
     <section id="about" class="section">
-        <div class="container about-container">
-            <div class="about-image-wrapper" data-aos="fade-right">
-                <img alt="Sazón Córdoba" class="about-img about-img-main" id="about-img">
-                <div class="about-img-badge">
-                    <i class="ph ph-star-fill"></i>
-                    <span>Experiencia Premium</span>
-                </div>
-            </div>
-            <div class="about-content" data-aos="fade-left">
+        <div class="container about-container-modern">
+            <div class="about-content" data-aos="fade-up">
+                <span class="eyebrow">Sobre el evento</span>
                 <h2 class="section-title" id="about-title">Una Experiencia <span class="text-gradient">Inolvidable</span></h2>
                 <p class="section-desc" id="about-desc">Sazón Córdoba es más que una feria gastronómica; es un tributo a nuestras raíces.</p>
-                <div class="features" id="about-features"></div>
+                <div class="features-grid" id="about-features"></div>
+            </div>
+            <div class="about-image-wrapper" data-aos="zoom-in">
+                <img alt="Sazón Córdoba" class="about-img about-img-main" id="about-img">
+                <div class="about-img-badge floating-badge">
+                    <i class="ph ph-star-fill"></i>
+                    <span>Alta Cocina</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Chefs Section -->
-    <section id="chefs" class="section section-dark">
-        <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up" id="chefs-title">Exponentes <span class="text-gradient">Especiales</span></h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="chefs-subtitle"></p>
-            
-            <div class="chefs-grid" id="chefs-grid"></div>
+    <!-- Chefs Section (SWIPER CAROUSEL) -->
+    <section id="chefs" class="section section-light">
+        <div class="container">
+            <div class="section-header-modern">
+                <div>
+                    <span class="eyebrow">Talento invitado</span>
+                    <h2 class="section-title" data-aos="fade-up" id="chefs-title">Exponentes <span class="text-gradient">Especiales</span></h2>
+                    <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="chefs-subtitle"></p>
+                </div>
+                <div class="slider-nav" data-aos="fade-left">
+                    <button class="swiper-button-prev-chef"><i class="ph ph-arrow-left"></i></button>
+                    <button class="swiper-button-next-chef"><i class="ph ph-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <div class="swiper chefSwiper" data-aos="fade-up" data-aos-delay="200">
+                <div class="swiper-wrapper" id="chefs-grid">
+                    <!-- Dynamic Swiper Slides inserted via JS -->
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Dishes Gallery Section -->
-    <section id="dishes" class="section">
-        <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up" id="dishes-title">Platillos <span class="text-gradient">Destacados</span></h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="dishes-subtitle"></p>
-            
-            <div class="dishes-gallery" id="dishes-gallery"></div>
-        </div>
-    </section>
-
-    <!-- Itinerary Section -->
-    <section id="itinerary" class="section section-dark">
+    <!-- Dishes Section (3D Coverflow) -->
+    <section id="dishes" class="section section-dishes">
         <div class="container">
             <div class="text-center">
+                <span class="eyebrow">Para el paladar</span>
+                <h2 class="section-title" data-aos="fade-up" id="dishes-title">Platillos <span class="text-gradient">Destacados</span></h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="dishes-subtitle"></p>
+            </div>
+
+            <div class="dishes-gallery" id="dishes-gallery" data-aos="fade-up" data-aos-delay="150">
+                <!-- Dynamic dish cards inserted via JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Itinerary Section (Interactive Timeline / Day pass) -->
+    <section id="itinerary" class="section">
+        <div class="container">
+            <div class="text-center mb-40">
+                <span class="eyebrow">Agenda del evento</span>
                 <h2 class="section-title" data-aos="fade-up" id="itinerary-title">Itinerario y <span class="text-gradient">Menú</span></h2>
                 <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="itinerary-subtitle"></p>
             </div>
 
-            <div class="timeline" id="timeline"></div>
+            <div class="day-tabs" id="day-tabs" data-aos="fade-up"></div>
+            <div class="timeline modern-timeline" id="timeline"></div>
+        </div>
+    </section>
+
+    <!-- Sponsors Section -->
+    <section id="sponsors" class="section section-light">
+        <div class="container text-center">
+            <span class="eyebrow">Con el respaldo de</span>
+            <h2 class="section-title" data-aos="fade-up" id="sponsors-title">Nuestros <span class="text-gradient">Patrocinadores</span></h2>
+            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="sponsors-subtitle">Haciendo posible el mejor evento de la ciudad.</p>
+
+            <div class="sponsors-grid modern-sponsors" id="sponsors-grid" data-aos="zoom-in" data-aos-delay="200"></div>
         </div>
     </section>
 
     <!-- FAQ Section -->
     <section id="faq" class="section">
         <div class="container">
-            <div class="text-center">
+            <div class="text-center mb-40">
+                <span class="eyebrow">¿Dudas?</span>
                 <h2 class="section-title" data-aos="fade-up" id="faq-title">Preguntas <span class="text-gradient">Frecuentes</span></h2>
                 <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="faq-subtitle"></p>
             </div>
-            
-            <div class="faq-container" data-aos="fade-up" data-aos-delay="200" id="faq-container"></div>
-        </div>
-    </section>
 
-    <!-- Sponsors Section -->
-    <section id="sponsors" class="section">
-        <div class="container text-center">
-            <h2 class="section-title" data-aos="fade-up" id="sponsors-title">Nuestros <span class="text-gradient">Patrocinadores</span></h2>
-            <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="sponsors-subtitle">Haciendo posible el mejor evento de la ciudad.</p>
-            
-            <div class="sponsors-grid" id="sponsors-grid" data-aos="zoom-in" data-aos-delay="200"></div>
+            <div class="faq-container" data-aos="fade-up" data-aos-delay="200" id="faq-container"></div>
         </div>
     </section>
 
@@ -147,6 +197,8 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="./js/main.js?v=20"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="./js/main.js?v=45"></script>
 </body>
 </html>
