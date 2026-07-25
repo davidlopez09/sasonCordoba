@@ -76,6 +76,12 @@
             <span>Desliza</span>
             <i class="ph ph-arrow-down"></i>
         </div>
+
+        <div class="hero-divider" aria-hidden="true">
+            <svg viewBox="0 0 1440 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,32 C240,90 480,0 720,24 C960,48 1200,88 1440,40 L1440,90 L0,90 Z"></path>
+            </svg>
+        </div>
     </header>
 
     <!-- Identity Section (Sticky Layout) -->
@@ -120,10 +126,10 @@
                     <h2 class="section-title" data-aos="fade-up" id="chefs-title">Exponentes <span class="text-gradient">Especiales</span></h2>
                     <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="chefs-subtitle"></p>
                 </div>
-                <div class="slider-nav" data-aos="fade-left">
+                <!-- <div class="slider-nav" data-aos="fade-left">
                     <button class="swiper-button-prev-chef"><i class="ph ph-arrow-left"></i></button>
                     <button class="swiper-button-next-chef"><i class="ph ph-arrow-right"></i></button>
-                </div>
+                </div> -->
             </div>
 
             <div class="swiper chefSwiper" data-aos="fade-up" data-aos-delay="200">
@@ -189,11 +195,27 @@
 
     <!-- Footer -->
     <footer class="footer">
+        <div class="container">
+            <div class="footer-cta" data-aos="fade-up">
+                <div class="footer-cta-text">
+                    <h3>No te pierdas ninguna edición</h3>
+                    <p>Suscríbete y entérate primero de chefs invitados, platillos y fechas.</p>
+                </div>
+                <form class="footer-newsletter-form" id="newsletter-form">
+                    <input type="email" placeholder="Tu correo electrónico" aria-label="Correo electrónico" required>
+                    <button type="submit" class="btn btn-primary">Suscribirme</button>
+                </form>
+            </div>
+        </div>
         <div class="container footer-container" id="footer-container"></div>
         <div class="footer-bottom">
             <p id="footer-copyright"></p>
         </div>
     </footer>
+
+    <button class="back-to-top" id="backToTop" aria-label="Volver arriba">
+        <i class="ph ph-arrow-up"></i>
+    </button>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

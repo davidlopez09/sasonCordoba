@@ -369,24 +369,45 @@ function renderItinerary(itinerario, subtitulos) {
 
 function renderTimelineForDay(day) {
     const timeline = document.getElementById("timeline");
-    const items = day ? itineraryData.filter((item) => item.dia === day) : itineraryData;
-    timeline.innerHTML = items
-        .map(
-            (item) =>
-                `<div class="timeline-item" data-aos="fade-up">
-            <div class="timeline-time">
-                <span class="time">${item.hora}</span>
-                <span class="day">${item.dia}</span>
-            </div>
-            <div class="timeline-content" style="background:${item.color_fondo || "#ffffff"}; border-color:${item.color_borde || ""}">
-                <h3 class="timeline-title" style="color:${item.color || "#241E18"}">${item.titulo}</h3>
-                <p class="timeline-chef" style="color:${item.color ? item.color : ""}">Por: <strong>${item.nombre_chef}</strong></p>
-                <p class="timeline-desc" style="color:${item.color || "#241E18"}">${item.descripcion}</p>
-            </div>
-        </div>`,
-        )
-        .join("");
-    if (window.AOS) AOS.refreshHard ? AOS.refreshHard() : AOS.refresh();
+
+    // Salida: si ya había contenido, se desvanece suavemente antes de reemplazarlo
+    const swapContent = () => {
+        const items = day ? itineraryData.filter((item) => item.dia === day) : itineraryData;
+        timeline.innerHTML = items
+            .map(
+                (item, i) =>
+                    `<div class="timeline-item" style="transition-delay:${i * 70}ms">
+                <div class="timeline-time">
+                    <span class="time">${item.hora}</span>
+                    <span class="day">${item.dia}</span>
+                </div>
+                <div class="timeline-content" style="background:${item.color_fondo || "#ffffff"}; border-color:${item.color_borde || ""}">
+                    <h3 class="timeline-title" style="color:${item.color || "#241E18"}">${item.titulo}</h3>
+                    <p class="timeline-chef" style="color:${item.color ? item.color : ""}">Por: <strong>${item.nombre_chef}</strong></p>
+                    <p class="timeline-desc" style="color:${item.color || "#241E18"}">${item.descripcion}</p>
+                </div>
+            </div>`,
+            )
+            .join("");
+
+        // Entrada: en el siguiente frame se activa la clase que dispara la transición CSS
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                timeline.querySelectorAll(".timeline-item").forEach((el) => el.classList.add("tl-in"));
+            });
+        });
+    };
+
+    if (timeline.children.length) {
+        timeline.style.transition = "opacity 0.2s ease";
+        timeline.style.opacity = "0";
+        setTimeout(() => {
+            swapContent();
+            timeline.style.opacity = "1";
+        }, 180);
+    } else {
+        swapContent();
+    }
 }
 
 function renderSponsors(patrocinadores, subtitulos) {
@@ -624,8 +645,28 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     const navbar = document.getElementById("navbar");
+    const backToTop = document.getElementById("backToTop");
     window.addEventListener("scroll", () => {
         navbar.classList.toggle("scrolled", window.scrollY > 50);
+        if (backToTop) backToTop.classList.toggle("visible", window.scrollY > 600);
+    }, { passive: true });
+
+    backToTop?.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    const newsletterForm = document.getElementById("newsletter-form");
+    newsletterForm?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const btn = newsletterForm.querySelector("button");
+        const original = btn.textContent;
+        btn.textContent = "¡Listo! ✓";
+        btn.disabled = true;
+        newsletterForm.reset();
+        setTimeout(() => {
+            btn.textContent = original;
+            btn.disabled = false;
+        }, 2600);
     });
 
     document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
