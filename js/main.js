@@ -280,8 +280,11 @@ function renderDishes(platillos, subtitulos) {
     if (!platillos?.length) return;
     const gallery = document.getElementById('dishes-gallery');
     gallery.innerHTML = platillos.map((p, i) =>
-        `<div class="dish-item" data-aos="fade-up" data-aos-delay="${100 + i * 100}">
+        `<div class="dish-item" data-aos="fade-up" data-aos-delay="${100 + i * 100}" data-img="${p.imagen || ''}" data-title="${p.nombre || ''}" data-desc="${p.descripcion || ''}">
             <img src="${p.imagen || 'https://via.placeholder.com/600/222/FFF?text=Platillo'}" alt="${p.nombre}">
+            <div class="dish-zoom-hint">
+                <i class="ph ph-arrows-out-simple"></i>
+            </div>
             <div class="dish-overlay">
                 <h4 style="color:${p.color || '#ffffff'}">${p.nombre}</h4>
                 <p style="color:${p.color || '#ffffff'}">${p.descripcion}</p>
@@ -290,6 +293,32 @@ function renderDishes(platillos, subtitulos) {
     ).join('');
 
     setSubtitles('dishes', subtitulos);
+
+    // Event listener para abrir lightbox
+    document.querySelectorAll('.dish-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const imgUrl = item.getAttribute('data-img');
+            const title = item.getAttribute('data-title');
+            const desc = item.getAttribute('data-desc');
+            openDishLightbox(imgUrl, title, desc);
+        });
+    });
+}
+
+function openDishLightbox(imgUrl, title, desc) {
+    const lightbox = document.getElementById('dishLightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxTitle = document.getElementById('lightboxTitle');
+    const lightboxDesc = document.getElementById('lightboxDesc');
+
+    if (!lightbox || !lightboxImg) return;
+
+    lightboxImg.src = imgUrl;
+    if (lightboxTitle) lightboxTitle.textContent = title;
+    if (lightboxDesc) lightboxDesc.textContent = desc;
+
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
 
 function renderItinerary(itinerario, subtitulos) {
@@ -465,8 +494,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     const navbar = document.getElementById('navbar');
+    const scrollProgress = document.getElementById('scrollProgress');
+
     window.addEventListener('scroll', () => {
-        navbar.classList.toggle('scrolled', window.scrollY > 50);
+        const scrollTop = window.scrollY;
+        navbar.classList.toggle('scrolled', scrollTop > 50);
+
+        if (scrollProgress) {
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            scrollProgress.style.width = `${progress}%`;
+        }
+    });
+
+    // Cierre de lightbox
+    const lightbox = document.getElementById('dishLightbox');
+    const lightboxClose = document.getElementById('lightboxClose');
+
+    const closeLightbox = () => {
+        if (!lightbox) return;
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    lightboxClose?.addEventListener('click', closeLightbox);
+    lightbox?.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
     });
 
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -485,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const navLinks = document.querySelector('.nav-links');
-    mobileMenuBtn.addEventListener('click', () => {
+    mobileMenuBtn?.addEventListener('click', () => {
         if (navLinks.style.display === 'flex') {
             navLinks.style.display = '';
         } else {

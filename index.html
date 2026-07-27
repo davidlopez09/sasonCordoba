@@ -22,6 +22,9 @@
 </head>
 <body>
 
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
     <!-- Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="page-loader-spinner"></div>
@@ -46,14 +49,22 @@
     <header class="hero" id="home">
         <div class="hero-slider" id="hero-slider"></div>
         <div class="hero-overlay"></div>
+        <div class="hero-glow hero-glow-1"></div>
+        <div class="hero-glow hero-glow-2"></div>
+        
         <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
             <div class="badge hero-text" id="hero-badge"></div>
             <h1 class="hero-title hero-text" id="hero-title"></h1>
             <p class="hero-subtitle hero-text" id="hero-subtitle"></p>
-            <div class="hero-actions" id="hero-actions"></div>
             
+            <div class="hero-actions" id="hero-actions"></div>
             <div class="hero-stats" id="hero-stats"></div>
         </div>
+
+        <a href="#identity" class="scroll-down-hint" aria-label="Desplazarse hacia abajo">
+            <i class="ph ph-caret-double-down"></i>
+            <span>Explorar</span>
+        </a>
     </header>
 
     <!-- Identity Section -->
@@ -133,7 +144,9 @@
             <h2 class="section-title" data-aos="fade-up" id="sponsors-title">Nuestros <span class="text-gradient">Patrocinadores</span></h2>
             <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="sponsors-subtitle">Haciendo posible el mejor evento de la ciudad.</p>
             
-            <div class="sponsors-grid" id="sponsors-grid" data-aos="zoom-in" data-aos-delay="200"></div>
+            <div class="sponsors-marquee" data-aos="zoom-in" data-aos-delay="200">
+                <div class="sponsors-track" id="sponsors-grid"></div>
+            </div>
         </div>
     </section>
 
@@ -145,8 +158,25 @@
         </div>
     </footer>
 
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="dishLightbox">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar vista previa"><i class="ph ph-x"></i></button>
+        <div class="lightbox-content">
+            <img id="lightboxImg" src="" alt="">
+            <div class="lightbox-info">
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxDesc"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Flotante de WhatsApp -->
+    <!-- <a href="https://wa.me/573000000000?text=Hola,%20quisiera%20más%20información%20sobre%20Sazón%20Córdoba" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Contactar por WhatsApp">
+        <i class="ph ph-whatsapp-logo"></i>
+    </a> -->
+
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="./js/main.js?v=20"></script>
+    <script src="./js/main.js?v=21"></script>
 </body>
 </html>
