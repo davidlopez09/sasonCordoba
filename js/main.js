@@ -276,32 +276,205 @@ function renderChefs(exponentes, subtitulos) {
     setSubtitles('chefs', subtitulos);
 }
 
-function renderDishes(platillos, subtitulos) {
-    if (!platillos?.length) return;
-    const gallery = document.getElementById('dishes-gallery');
-    gallery.innerHTML = platillos.map((p, i) =>
-        `<div class="dish-item" data-aos="fade-up" data-aos-delay="${100 + i * 100}" data-img="${p.imagen || ''}" data-title="${p.nombre || ''}" data-desc="${p.descripcion || ''}">
-            <img src="${p.imagen || 'https://via.placeholder.com/600/222/FFF?text=Platillo'}" alt="${p.nombre}">
-            <div class="dish-zoom-hint">
-                <i class="ph ph-arrows-out-simple"></i>
-            </div>
-            <div class="dish-overlay">
-                <h4 style="color:${p.color || '#ffffff'}">${p.nombre}</h4>
-                <p style="color:${p.color || '#ffffff'}">${p.descripcion}</p>
-            </div>
-        </div>`
-    ).join('');
+let dishCarouselInterval = null;
 
+const DEFAULT_PLATILLOS = [
+    { nombre: 'Mote de Queso Córdoba', descripcion: 'Sopa tradicional a base de ñame espino, queso costeño y ahogado de cebolla.', imagen: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80' },
+    { nombre: 'Arroz de Mariscos del Sinú', descripcion: 'Arroz cremoso salteado con camarones, calamares y leche de coco al estilo caribeño.', imagen: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=800&q=80' },
+    { nombre: 'Carne en Posta Monteriana', descripcion: 'Tierna posta de res cocinada a fuego lento en reducción dulce de panela y especias.', imagen: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80' },
+    { nombre: 'Pastel de Arroz Tradicional', descripcion: 'Envuelta típica en hoja de bijao con finos cortes de cerdo, pollo y adobo criollo.', imagen: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80' }
+];
+
+function createDishCardHTML(p, idx = 0) {
+    return `<div class="dish-item" data-img="${p.imagen || ''}" data-title="${p.nombre || ''}" data-desc="${p.descripcion || ''}" data-index="${idx}">
+        <img src="${p.imagen || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80'}" alt="${p.nombre || 'Platillo'}">
+        <div class="dish-zoom-hint">
+            <i class="ph ph-arrows-out-simple"></i>
+        </div>
+        <div class="dish-overlay">
+            <h4 style="color:${p.color || '#ffffff'}">${p.nombre}</h4>
+            <p style="color:${p.color || '#ffffff'}">${p.descripcion}</p>
+        </div>
+    </div>`;
+}
+
+function renderDishes(platillos, subtitulos) {
+    const list = (platillos && platillos.length > 0) ? platillos : DEFAULT_PLATILLOS;
     setSubtitles('dishes', subtitulos);
 
-    // Event listener para abrir lightbox
+    const sliderWrapper = document.getElementById('dishesSliderWrapper');
+    const sliderTrack = document.getElementById('dishes-slider-track');
+    const dotsNav = document.getElementById('dishSliderDots');
+
+    if (!sliderTrack) return;
+
+    const N = list.length;
+
+    // Crear 5 réplicas exactas del catálogo para rotación infinita fluida
+    const itemsList = [
+        ...list,
+        ...list,
+        ...list,
+        ...list,
+        ...list
+    ];
+
+    sliderTrack.innerHTML = itemsList.map((p, idx) => createDishCardHTML(p, idx % N)).join('');
+
+    const cards = Array.from(sliderTrack.children);
+
+    // Empezamos en el conjunto central (Conjunto 2)
+    let currentIndex = 2 * N;
+
+    // Crear puntos de navegación (dots)
+    if (dotsNav) {
+        dotsNav.innerHTML = list.map((_, i) =>
+            `<div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>`
+        ).join('');
+    }
+
+    const dots = dotsNav ? Array.from(dotsNav.children) : [];
+
+    function updateCarousel(withTransition = true) {
+        if (!cards.length) return;
+
+        const wrapperWidth = sliderWrapper ? sliderWrapper.offsetWidth : window.innerWidth;
+        const isMobile = window.innerWidth <= 768;
+        const cardWidth = isMobile ? 280 : 360;
+        const cardGap = 30;
+        const step = cardWidth + cardGap;
+        const centerOffset = (wrapperWidth / 2) - (cardWidth / 2);
+
+        const translateX = centerOffset - (currentIndex * step);
+
+        if (!withTransition) {
+            sliderTrack.style.transition = 'none';
+        } else {
+            sliderTrack.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+        }
+
+        sliderTrack.style.transform = `translateX(${translateX}px)`;
+
+        cards.forEach((card, idx) => {
+            if (idx === currentIndex) {
+                card.classList.add('center-active');
+            } else {
+                card.classList.remove('center-active');
+            }
+        });
+
+        // Actualizar el punto (dot) activo
+        const realIndex = currentIndex % N;
+        dots.forEach((dot, idx) => {
+            dot.classList.toggle('active', idx === realIndex);
+        });
+    }
+
+    function normalizeIndexSilently() {
+        if (currentIndex >= 3 * N || currentIndex < 1 * N) {
+            const realIndex = currentIndex % N;
+            currentIndex = 2 * N + ((realIndex + N) % N);
+            updateCarousel(false);
+        }
+    }
+
+    function nextSlide() {
+        currentIndex++;
+        updateCarousel(true);
+        setTimeout(normalizeIndexSilently, 620);
+    }
+
+    function prevSlide() {
+        currentIndex--;
+        updateCarousel(true);
+        setTimeout(normalizeIndexSilently, 620);
+    }
+
+    function goToRealIndex(targetRealIdx) {
+        currentIndex = 2 * N + targetRealIdx;
+        updateCarousel(true);
+        setTimeout(normalizeIndexSilently, 620);
+    }
+
+    function startAutoPlay() {
+        stopAutoPlay();
+        dishCarouselInterval = setInterval(nextSlide, 5000);
+    }
+
+    function stopAutoPlay() {
+        if (dishCarouselInterval) {
+            clearInterval(dishCarouselInterval);
+            dishCarouselInterval = null;
+        }
+    }
+
+    // Navegación por flechas
+    const sliderPrev = document.getElementById('dishSliderPrev');
+    const sliderNext = document.getElementById('dishSliderNext');
+
+    if (sliderPrev) {
+        sliderPrev.onclick = (e) => {
+            e.stopPropagation();
+            prevSlide();
+            startAutoPlay();
+        };
+    }
+
+    if (sliderNext) {
+        sliderNext.onclick = (e) => {
+            e.stopPropagation();
+            nextSlide();
+            startAutoPlay();
+        };
+    }
+
+    // Navegación por puntos (dots)
+    dots.forEach(dot => {
+        dot.onclick = (e) => {
+            e.stopPropagation();
+            const targetRealIdx = parseInt(dot.getAttribute('data-index'), 10);
+            goToRealIndex(targetRealIdx);
+            startAutoPlay();
+        };
+    });
+
+    // Pausar rotación ÚNICAMENTE cuando el puntero está físicamente encima de una tarjeta de platillo
+    cards.forEach(card => {
+        card.onmouseenter = stopAutoPlay;
+        card.onmouseleave = startAutoPlay;
+    });
+
+    // Clic en tarjeta para centrarla o abrir Lightbox si ya está centrada
+    cards.forEach((card, idx) => {
+        card.onclick = () => {
+            if (idx !== currentIndex) {
+                currentIndex = idx;
+                updateCarousel(true);
+                setTimeout(normalizeIndexSilently, 620);
+                startAutoPlay();
+            } else {
+                const imgUrl = card.getAttribute('data-img');
+                const title = card.getAttribute('data-title');
+                const desc = card.getAttribute('data-desc');
+                openDishLightbox(imgUrl, title, desc);
+            }
+        };
+    });
+
+    updateCarousel(false);
+    startAutoPlay();
+
+    window.addEventListener('resize', () => updateCarousel(false));
+}
+
+function attachLightboxListeners() {
     document.querySelectorAll('.dish-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.onclick = () => {
             const imgUrl = item.getAttribute('data-img');
             const title = item.getAttribute('data-title');
             const desc = item.getAttribute('data-desc');
             openDishLightbox(imgUrl, title, desc);
-        });
+        };
     });
 }
 

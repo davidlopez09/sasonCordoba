@@ -104,13 +104,23 @@
         </div>
     </section>
 
-    <!-- Dishes Gallery Section -->
+    <!-- Dishes Gallery Section (Carrusel Infinito 3D) -->
     <section id="dishes" class="section">
         <div class="container text-center">
             <h2 class="section-title" data-aos="fade-up" id="dishes-title">Platillos <span class="text-gradient">Destacados</span></h2>
             <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="dishes-subtitle"></p>
             
-            <div class="dishes-gallery" id="dishes-gallery"></div>
+            <div class="slider-wrapper" data-aos="fade-up" data-aos-delay="150" id="dishesSliderWrapper">
+                <button class="slider-arrow slider-prev" id="dishSliderPrev" aria-label="Anterior"><i class="ph ph-caret-left"></i></button>
+                <div class="dishes-slider-track" id="dishes-slider-track"></div>
+                <button class="slider-arrow slider-next" id="dishSliderNext" aria-label="Siguiente"><i class="ph ph-caret-right"></i></button>
+            </div>
+
+            <!-- Indicadores circulares de diapositivas -->
+            <div class="slider-dots-nav" id="dishSliderDots"></div>
+
+            <!-- Contenedor secundario mantenido para compatibilidad de la API -->
+            <div class="dishes-gallery" id="dishes-gallery" style="display:none;"></div>
         </div>
     </section>
 

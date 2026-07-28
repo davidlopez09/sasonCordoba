@@ -1413,3 +1413,203 @@ img {
     .countdown-live-dot { animation: none; }
     * { scroll-behavior: auto !important; }
 }
+
+/* =========================================
+   COMPARATIVA DE 4 OPCIONES DE GALERÍA
+   ========================================= */
+.gallery-options-nav {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.gallery-opt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 50px;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-darker);
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.gallery-opt-btn:hover {
+    color: var(--primary);
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.gallery-opt-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 8px 24px var(--primary-glow);
+}
+
+.gallery-option-block {
+    display: none;
+    animation: fadeInGallery 0.4s ease forwards;
+}
+
+.gallery-option-block.active {
+    display: block;
+}
+
+@keyframes fadeInGallery {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.gallery-block-header {
+    margin-bottom: 30px;
+}
+
+.gallery-block-desc {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 8px;
+}
+
+/* =========================================
+   CARRUSEL 3D INFINITO CON ENFOQUE CENTRAL
+   ========================================= */
+.slider-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 40px 0;
+}
+
+.dishes-slider-track {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
+}
+
+.dishes-slider-track .dish-item {
+    flex: 0 0 360px;
+    min-width: 320px;
+    height: 480px;
+    aspect-ratio: auto;
+    border-radius: 24px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                filter 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                border-color 0.6s ease,
+                box-shadow 0.6s ease;
+    opacity: 0.65;
+    filter: brightness(0.85);
+    transform: scale(0.88);
+    border: 2px solid transparent;
+}
+
+.dishes-slider-track .dish-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dishes-slider-track .dish-item.center-active {
+    opacity: 1;
+    filter: brightness(1.05);
+    transform: scale(1.08);
+    z-index: 10;
+    border-color: var(--primary);
+    box-shadow: 0 24px 60px rgba(255, 107, 0, 0.28);
+}
+
+.dishes-slider-track .dish-item.center-active .dish-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.slider-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid rgba(0,0,0,0.1);
+    color: var(--text-main);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.slider-arrow i {
+    font-size: 1.8rem;
+    color: var(--text-main);
+    line-height: 1;
+    display: block;
+    transition: var(--transition);
+}
+
+.slider-arrow:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-50%) scale(1.12);
+    box-shadow: 0 14px 35px var(--primary-glow);
+}
+
+.slider-arrow:hover i {
+    color: #ffffff;
+}
+
+.slider-prev { left: 10px; }
+.slider-next { right: 10px; }
+
+/* Indicadores de Dots */
+.slider-dots-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.slider-dots-nav .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.slider-dots-nav .dot:hover {
+    background: var(--primary-glow);
+}
+
+.slider-dots-nav .dot.active {
+    width: 32px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+@media (max-width: 768px) {
+    .dishes-slider-track .dish-item {
+        flex: 0 0 280px;
+        min-width: 260px;
+        height: 400px;
+    }
+    .slider-arrow { display: none; }
+}
