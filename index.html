@@ -18,7 +18,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="./css/style.css?v=14">
+    <link rel="stylesheet" href="./css/style.css?v=16">
 </head>
 <body>
 
@@ -90,6 +90,61 @@
                 <h2 class="section-title" id="about-title">Una Experiencia <span class="text-gradient">Inolvidable</span></h2>
                 <p class="section-desc" id="about-desc">Sazón Córdoba es más que una feria gastronómica; es un tributo a nuestras raíces.</p>
                 <div class="features" id="about-features"></div>
+                <div class="about-video-wrapper" id="about-video-wrapper" style="display:none;">
+                    <iframe id="about-video-frame" src="" title="Video introductorio Sazón Córdoba" allowfullscreen loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Haz Parte Section -->
+    <section id="participa" class="section section-dark">
+        <div class="container participa-container">
+            <div class="participa-content" data-aos="fade-right">
+                <h2 class="section-title" id="participa-title"></h2>
+                <p class="section-desc" id="participa-desc"></p>
+                <div class="participa-actions" id="participa-actions"></div>
+            </div>
+            <div class="participa-image-wrapper" id="participa-image-wrapper" data-aos="fade-left" style="display:none;">
+                <img alt="Haz parte de Sazón Córdoba" class="participa-img" id="participa-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Directorio de Expositores Section -->
+    <section id="directorio" class="section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title" data-aos="fade-up" id="directorio-title">Directorio de <span class="text-gradient">Expositores</span></h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="directorio-subtitle"></p>
+            </div>
+
+            <div class="directorio-controls" data-aos="fade-up" data-aos-delay="150">
+                <div class="directorio-search">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="directorio-search-input" placeholder="Buscar por nombre o producto...">
+                </div>
+                <div class="directorio-filters" id="directorio-filters"></div>
+            </div>
+
+            <div class="directorio-grid" id="directorio-grid"></div>
+            <p class="directorio-empty" id="directorio-empty" style="display:none;">No se encontraron expositores con ese criterio.</p>
+        </div>
+    </section>
+
+    <!-- Cuenta Regresiva / Horarios Section -->
+    <section id="countdown" class="section section-dark">
+        <div class="container text-center">
+            <h2 class="section-title" data-aos="fade-up">Faltan Para <span class="text-gradient">Sazón Córdoba</span></h2>
+            <div class="countdown-timer" id="countdown-timer" data-aos="zoom-in" data-aos-delay="100">
+                <div class="countdown-unit"><span class="countdown-number" id="cd-days">00</span><span class="countdown-label">Días</span></div>
+                <div class="countdown-unit"><span class="countdown-number" id="cd-hours">00</span><span class="countdown-label">Horas</span></div>
+                <div class="countdown-unit"><span class="countdown-number" id="cd-minutes">00</span><span class="countdown-label">Min</span></div>
+                <div class="countdown-unit"><span class="countdown-number" id="cd-seconds">00</span><span class="countdown-label">Seg</span></div>
+            </div>
+            <div class="countdown-info" data-aos="fade-up" data-aos-delay="200">
+                <div class="countdown-info-item"><i class="ph ph-clock"></i><span id="countdown-horario"></span></div>
+                <div class="countdown-info-item"><i class="ph ph-map-pin"></i><span id="countdown-lugar"></span></div>
             </div>
         </div>
     </section>
@@ -132,7 +187,67 @@
                 <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="itinerary-subtitle"></p>
             </div>
 
+            <div class="itinerary-filters" id="itinerary-filters" data-aos="fade-up" data-aos-delay="100"></div>
+
             <div class="timeline" id="timeline"></div>
+        </div>
+    </section>
+
+    <!-- Galería Section -->
+    <section id="galeria" class="section">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title" data-aos="fade-up" id="galeria-title">Galería <span class="text-gradient">Fotográfica</span></h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="galeria-subtitle"></p>
+            </div>
+            <div class="galeria-grid" id="galeria-grid" data-aos="fade-up" data-aos-delay="150"></div>
+            <div class="galeria-socials" id="galeria-socials"></div>
+        </div>
+    </section>
+
+    <!-- Registro Section -->
+    <section id="registro" class="section section-dark">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title" data-aos="fade-up" id="registro-title">Regístrate</h2>
+                <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="registro-subtitle"></p>
+            </div>
+
+            <div class="registro-tabs" data-aos="fade-up" data-aos-delay="150">
+                <button type="button" class="registro-tab active" data-tab="visitante" id="tabVisitante">Soy Visitante</button>
+                <button type="button" class="registro-tab" data-tab="expositor" id="tabExpositor">Quiero Ser Expositor</button>
+            </div>
+
+            <form class="registro-form active" id="formVisitante" data-aos="fade-up" data-aos-delay="200">
+                <div class="form-row">
+                    <input type="text" name="nombre" placeholder="Nombre completo" required>
+                    <input type="email" name="correo" placeholder="Correo electrónico" required>
+                </div>
+                <input type="tel" name="telefono" placeholder="Teléfono (opcional)">
+                <button type="submit" class="btn btn-primary btn-large">Registrarme como Visitante</button>
+                <p class="form-message" id="msgVisitante"></p>
+            </form>
+
+            <form class="registro-form" id="formExpositor" data-aos="fade-up" data-aos-delay="200">
+                <div class="form-row">
+                    <input type="text" name="nombre_empresa" placeholder="Nombre del negocio o marca" required>
+                    <select name="categoria" required>
+                        <option value="">Categoría</option>
+                        <option value="Gastronomía">Gastronomía</option>
+                        <option value="Bebidas">Bebidas</option>
+                        <option value="Artesanías">Artesanías</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <input type="text" name="nombre_contacto" placeholder="Nombre de contacto" required>
+                    <input type="email" name="correo" placeholder="Correo electrónico" required>
+                </div>
+                <input type="tel" name="telefono" placeholder="Teléfono (opcional)">
+                <textarea name="descripcion" placeholder="Cuéntanos sobre tu negocio o producto (opcional)"></textarea>
+                <button type="submit" class="btn btn-primary btn-large">Postularme como Expositor</button>
+                <p class="form-message" id="msgExpositor"></p>
+            </form>
         </div>
     </section>
 
@@ -156,6 +271,27 @@
             
             <div class="sponsors-marquee" data-aos="zoom-in" data-aos-delay="200">
                 <div class="sponsors-track" id="sponsors-grid"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto Section -->
+    <section id="contacto" class="section section-dark">
+        <div class="container contacto-container">
+            <div class="contacto-form-wrapper" data-aos="fade-right">
+                <h2 class="section-title" id="contacto-title">Contáctanos</h2>
+                <p class="section-desc" id="contacto-subtitle"></p>
+                <form id="formContacto">
+                    <input type="text" name="nombre" placeholder="Nombre completo" required>
+                    <input type="email" name="correo" placeholder="Correo electrónico" required>
+                    <input type="tel" name="telefono" placeholder="Teléfono (opcional)">
+                    <textarea name="mensaje" placeholder="Tu mensaje" required></textarea>
+                    <button type="submit" class="btn btn-primary btn-large">Enviar Mensaje</button>
+                    <p class="form-message" id="msgContacto"></p>
+                </form>
+            </div>
+            <div class="contacto-map-wrapper" data-aos="fade-left">
+                <iframe id="contacto-map" src="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Ubicación del evento"></iframe>
             </div>
         </div>
     </section>
@@ -187,6 +323,6 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="./js/main.js?v=21"></script>
+    <script src="./js/main.js?v=23"></script>
 </body>
 </html>

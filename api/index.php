@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require __DIR__ . '/db.php';
+require __DIR__ . '/mail.php';
 
 function jsonResponse($data, int $code = 200): void
 {
@@ -42,6 +43,82 @@ $isSiteRoute = $method === 'GET' && (
     basename($path) === 'index.php'
 );
 $isNavRoute = $method === 'GET' && $route === 'nav';
+$isTerminosRoute = $method === 'GET' && $route === 'terminos';
+$isRegistroVisitanteRoute = $method === 'POST' && $route === 'registro_visitante';
+$isRegistroExpositorRoute = $method === 'POST' && $route === 'registro_expositor';
+$isContactoRoute = $method === 'POST' && $route === 'contacto';
+
+function validarCorreo(?string $correo): string
+{
+    $correo = trim((string) $correo);
+    if ($correo === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        jsonError('Correo electrónico no válido', 422);
+    }
+    return $correo;
+}
+
+function requerido(?string $valor, string $campo): string
+{
+    $valor = trim((string) $valor);
+    if ($valor === '') {
+        jsonError("El campo \"$campo\" es obligatorio", 422);
+    }
+    return $valor;
+}
+
+if ($isRegistroVisitanteRoute) {
+    $nombre = requerido($_POST['nombre'] ?? null, 'Nombre');
+    $correo = validarCorreo($_POST['correo'] ?? null);
+    $telefono = trim($_POST['telefono'] ?? '') ?: null;
+
+    $stmt = $db->prepare('INSERT INTO registros_visitantes (nombre, correo, telefono) VALUES (?, ?, ?)');
+    $stmt->execute([$nombre, $correo, $telefono]);
+
+    sendConfirmationEmail(
+        $correo,
+        'Confirmación de registro - Sazón Córdoba',
+        "Hola $nombre,\n\nTu registro como visitante a Sazón Córdoba fue recibido exitosamente.\n\nTe esperamos el 11 y 12 de septiembre en el Centro de Eventos de Montería.\n\n¡Nos vemos allá!"
+    );
+
+    jsonResponse(['ok' => true]);
+}
+
+if ($isRegistroExpositorRoute) {
+    $nombreEmpresa = requerido($_POST['nombre_empresa'] ?? null, 'Nombre del negocio');
+    $nombreContacto = requerido($_POST['nombre_contacto'] ?? null, 'Nombre de contacto');
+    $correo = validarCorreo($_POST['correo'] ?? null);
+    $categoria = trim($_POST['categoria'] ?? '') ?: 'Gastronomía';
+    $telefono = trim($_POST['telefono'] ?? '') ?: null;
+    $descripcion = trim($_POST['descripcion'] ?? '') ?: null;
+
+    $stmt = $db->prepare('INSERT INTO registros_expositores (nombre_empresa, categoria, nombre_contacto, correo, telefono, descripcion) VALUES (?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$nombreEmpresa, $categoria, $nombreContacto, $correo, $telefono, $descripcion]);
+
+    sendConfirmationEmail(
+        $correo,
+        'Postulación recibida - Sazón Córdoba',
+        "Hola $nombreContacto,\n\nRecibimos la postulación de \"$nombreEmpresa\" como expositor de Sazón Córdoba.\n\nLa organización revisará tu información y se pondrá en contacto contigo pronto.\n\n¡Gracias por querer hacer parte del evento!"
+    );
+
+    jsonResponse(['ok' => true]);
+}
+
+if ($isContactoRoute) {
+    $nombre = requerido($_POST['nombre'] ?? null, 'Nombre');
+    $correo = validarCorreo($_POST['correo'] ?? null);
+    $telefono = trim($_POST['telefono'] ?? '') ?: null;
+    $mensaje = requerido($_POST['mensaje'] ?? null, 'Mensaje');
+
+    $stmt = $db->prepare('INSERT INTO mensajes_contacto (nombre, correo, telefono, mensaje) VALUES (?, ?, ?, ?)');
+    $stmt->execute([$nombre, $correo, $telefono, $mensaje]);
+
+    jsonResponse(['ok' => true]);
+}
+
+if ($isTerminosRoute) {
+    $terminos = $db->query('SELECT contenido FROM terminos_condiciones LIMIT 1')->fetchColumn();
+    jsonResponse(['contenido' => $terminos ?: '']);
+}
 
 if ($isNavRoute) {
     $data = [];
@@ -166,6 +243,16 @@ if ($isSiteRoute) {
     }
     unset($sd);
     $data['secciones_dinamicas'] = $seccionesDin;
+
+    // Haz Parte
+    $data['participa']['seccion'] = $db->query('SELECT * FROM seccion_participa WHERE activo = true LIMIT 1')->fetch() ?: null;
+    $data['participa']['botones'] = $db->query('SELECT * FROM botones_participa WHERE activo = true ORDER BY orden')->fetchAll();
+
+    // Directorio de Expositores
+    $data['directorio_expositores'] = $db->query('SELECT * FROM directorio_expositores WHERE activo = true ORDER BY orden')->fetchAll();
+
+    // Galería
+    $data['galeria'] = $db->query('SELECT * FROM galeria_items WHERE activo = true ORDER BY orden')->fetchAll();
 
     jsonResponse($data);
 }

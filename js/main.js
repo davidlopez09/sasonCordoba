@@ -12,11 +12,17 @@ async function loadNavData() {
 const SECTION_VISIBILITY_MAP = {
     identity: 'mostrar_identidad',
     about: 'mostrar_about',
+    participa: 'mostrar_participa',
+    directorio: 'mostrar_directorio',
+    countdown: 'mostrar_countdown',
     chefs: 'mostrar_chefs',
     dishes: 'mostrar_platillos',
     itinerary: 'mostrar_itinerario',
+    galeria: 'mostrar_galeria',
     sponsors: 'mostrar_sponsors',
     faq: 'mostrar_faq',
+    registro: 'mostrar_registro',
+    contacto: 'mostrar_contacto',
 };
 
 function toggleSection(id, visible) {
@@ -118,12 +124,18 @@ async function loadSiteData() {
         });
 
         if (config.mostrar_identidad !== '0') renderIdentity(data.identidad);
-        if (config.mostrar_about !== '0') renderAbout(data.about);
+        if (config.mostrar_about !== '0') renderAbout(data.about, config);
+        if (config.mostrar_participa !== '0') renderParticipa(data.participa, data.subtitulos);
+        if (config.mostrar_directorio !== '0') renderDirectorio(data.directorio_expositores, data.subtitulos);
+        if (config.mostrar_countdown !== '0') renderCountdown(config);
         if (config.mostrar_chefs !== '0') renderChefs(data.exponentes, data.subtitulos);
         if (config.mostrar_platillos !== '0') renderDishes(data.platillos_destacados, data.subtitulos);
         if (config.mostrar_itinerario !== '0') renderItinerary(data.itinerario, data.subtitulos);
+        if (config.mostrar_galeria !== '0') renderGaleria(data.galeria, data.subtitulos, config);
         if (config.mostrar_sponsors !== '0') renderSponsors(data.patrocinadores, data.subtitulos);
         if (config.mostrar_faq !== '0') renderFaq(data.faq, data.subtitulos);
+        if (config.mostrar_registro !== '0') setSubtitles('registro', data.subtitulos);
+        if (config.mostrar_contacto !== '0') renderContacto(data.subtitulos, config);
 
         renderHero(data.hero);
         renderFooter(data.footer, data.configuraciones, data.menu_nav);
@@ -227,7 +239,7 @@ function renderIdentity(identidad) {
     }
 }
 
-function renderAbout(about) {
+function renderAbout(about, config) {
     if (!about.seccion) return;
     const s = about.seccion;
     const img = document.getElementById('about-img');
@@ -252,6 +264,143 @@ function renderAbout(about) {
             </div>`
         ).join('');
     }
+
+    const videoWrapper = document.getElementById('about-video-wrapper');
+    const videoFrame = document.getElementById('about-video-frame');
+    if (videoWrapper && videoFrame && config?.about_video_url) {
+        videoFrame.src = config.about_video_url;
+        videoWrapper.style.display = 'block';
+    }
+}
+
+function renderParticipa(participa, subtitulos) {
+    const s = participa?.seccion;
+    if (!s) return;
+
+    const titleEl = document.getElementById('participa-title');
+    const descEl = document.getElementById('participa-desc');
+    if (s.titulo) { titleEl.textContent = s.titulo; if (s.color) titleEl.style.color = s.color; }
+    if (s.descripcion) { descEl.textContent = s.descripcion; if (s.color) descEl.style.color = s.color; }
+
+    const containerEl = document.querySelector('.participa-container');
+    if (s.imagen) {
+        const wrapper = document.getElementById('participa-image-wrapper');
+        const img = document.getElementById('participa-img');
+        img.src = s.imagen;
+        wrapper.style.display = '';
+        containerEl?.classList.remove('no-image');
+    } else {
+        containerEl?.classList.add('no-image');
+    }
+
+    const actions = document.getElementById('participa-actions');
+    if (actions) {
+        actions.innerHTML = (participa.botones || []).map(b =>
+            `<a href="${b.enlace}" class="btn btn-large" style="background:${b.color_fondo}; color:${b.color_texto}; border-color:${b.color_borde}">${b.texto}</a>`
+        ).join('');
+    }
+
+    setSubtitles('participa', subtitulos);
+}
+
+const DIRECTORIO_STATE = { items: [], search: '', categoria: 'todas' };
+
+function renderDirectorioGrid() {
+    const grid = document.getElementById('directorio-grid');
+    const empty = document.getElementById('directorio-empty');
+    if (!grid) return;
+
+    const q = DIRECTORIO_STATE.search.trim().toLowerCase();
+    const filtered = DIRECTORIO_STATE.items.filter(item => {
+        const matchesCategoria = DIRECTORIO_STATE.categoria === 'todas' || item.categoria === DIRECTORIO_STATE.categoria;
+        const matchesQuery = !q || item.nombre.toLowerCase().includes(q) || (item.descripcion || '').toLowerCase().includes(q);
+        return matchesCategoria && matchesQuery;
+    });
+
+    grid.innerHTML = filtered.map(item => `
+        <div class="directorio-card">
+            ${item.logo ? `<img src="${item.logo}" alt="${item.nombre}" class="directorio-logo">` : `<div class="directorio-logo directorio-logo-placeholder"><i class="ph ph-storefront"></i></div>`}
+            <div class="directorio-info">
+                <span class="directorio-categoria">${item.categoria}</span>
+                <h3 style="color:${item.color || '#1a1a1a'}">${item.nombre}</h3>
+                <p style="color:${item.color || '#1a1a1a'}">${item.descripcion || ''}</p>
+                ${item.contacto ? `<span class="directorio-contacto"><i class="ph ph-envelope-simple"></i> ${item.contacto}</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+
+    empty.style.display = filtered.length ? 'none' : 'block';
+}
+
+function renderDirectorio(directorio, subtitulos) {
+    if (!directorio?.length) return;
+    DIRECTORIO_STATE.items = directorio;
+
+    const categorias = ['todas', ...new Set(directorio.map(i => i.categoria))];
+    const filtersEl = document.getElementById('directorio-filters');
+    if (filtersEl) {
+        filtersEl.innerHTML = categorias.map(cat =>
+            `<button type="button" class="directorio-filter-btn${cat === 'todas' ? ' active' : ''}" data-categoria="${cat}">${cat === 'todas' ? 'Todas' : cat}</button>`
+        ).join('');
+        filtersEl.querySelectorAll('.directorio-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                filtersEl.querySelectorAll('.directorio-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                DIRECTORIO_STATE.categoria = btn.getAttribute('data-categoria');
+                renderDirectorioGrid();
+            });
+        });
+    }
+
+    const searchInput = document.getElementById('directorio-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            DIRECTORIO_STATE.search = searchInput.value;
+            renderDirectorioGrid();
+        });
+    }
+
+    renderDirectorioGrid();
+    setSubtitles('directorio', subtitulos);
+}
+
+let countdownInterval = null;
+
+function renderCountdown(config) {
+    const target = config?.evento_fecha_inicio ? new Date(config.evento_fecha_inicio) : null;
+    const horarioEl = document.getElementById('countdown-horario');
+    const lugarEl = document.getElementById('countdown-lugar');
+    if (horarioEl) horarioEl.textContent = config?.evento_horario || '';
+    if (lugarEl) lugarEl.textContent = config?.evento_lugar || '';
+
+    if (!target || isNaN(target.getTime())) return;
+
+    const daysEl = document.getElementById('cd-days');
+    const hoursEl = document.getElementById('cd-hours');
+    const minutesEl = document.getElementById('cd-minutes');
+    const secondsEl = document.getElementById('cd-seconds');
+    if (!daysEl) return;
+
+    function tick() {
+        const diff = target.getTime() - Date.now();
+        if (diff <= 0) {
+            [daysEl, hoursEl, minutesEl, secondsEl].forEach(el => el.textContent = '00');
+            clearInterval(countdownInterval);
+            return;
+        }
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        daysEl.textContent = String(days).padStart(2, '0');
+        hoursEl.textContent = String(hours).padStart(2, '0');
+        minutesEl.textContent = String(minutes).padStart(2, '0');
+        secondsEl.textContent = String(seconds).padStart(2, '0');
+    }
+
+    if (countdownInterval) clearInterval(countdownInterval);
+    tick();
+    countdownInterval = setInterval(tick, 1000);
 }
 
 function renderChefs(exponentes, subtitulos) {
@@ -285,8 +434,12 @@ const DEFAULT_PLATILLOS = [
     { nombre: 'Pastel de Arroz Tradicional', descripcion: 'Envuelta típica en hoja de bijao con finos cortes de cerdo, pollo y adobo criollo.', imagen: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80' }
 ];
 
+const DISH_ETIQUETA_LABELS = { plato_dia: 'Plato del Día', recomendado: 'Recomendado' };
+
 function createDishCardHTML(p, idx = 0) {
+    const etiquetaLabel = DISH_ETIQUETA_LABELS[p.etiqueta];
     return `<div class="dish-item" data-img="${p.imagen || ''}" data-title="${p.nombre || ''}" data-desc="${p.descripcion || ''}" data-index="${idx}">
+        ${etiquetaLabel ? `<span class="dish-badge dish-badge-${p.etiqueta}">${etiquetaLabel}</span>` : ''}
         <img src="${p.imagen || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80'}" alt="${p.nombre || 'Platillo'}">
         <div class="dish-zoom-hint">
             <i class="ph ph-arrows-out-simple"></i>
@@ -494,10 +647,27 @@ function openDishLightbox(imgUrl, title, desc) {
     document.body.style.overflow = 'hidden';
 }
 
-function renderItinerary(itinerario, subtitulos) {
-    if (!itinerario?.length) return;
+const ITINERARY_TIPO_LABELS = {
+    general: 'General', taller: 'Talleres', presentacion: 'Presentaciones Artísticas',
+    conferencia: 'Conferencias', concurso: 'Concursos',
+};
+
+function buildCalendarUrl(item) {
+    const details = `${item.descripcion || ''}${item.nombre_chef ? ' - Por: ' + item.nombre_chef : ''}`;
+    const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: item.titulo || 'Sazón Córdoba',
+        details,
+        location: 'Centro de Eventos, Montería',
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function renderItineraryList(itinerario, activeTipo) {
     const timeline = document.getElementById('timeline');
-    timeline.innerHTML = itinerario.map(item =>
+    const filtered = activeTipo === 'todos' ? itinerario : itinerario.filter(i => (i.tipo || 'general') === activeTipo);
+
+    timeline.innerHTML = filtered.map(item =>
         `<div class="timeline-item" data-aos="fade-up">
             <div class="timeline-time" style="color:${item.color || '#1a1a1a'}">
                 <span class="time" style="color:${item.color || '#1a1a1a'}">${item.hora}</span>
@@ -507,11 +677,140 @@ function renderItinerary(itinerario, subtitulos) {
                 <h3 class="timeline-title" style="color:${item.color || '#1a1a1a'}">${item.titulo}</h3>
                 <p class="timeline-chef" style="color:${item.color || '#1a1a1a'}">Por: <strong>${item.nombre_chef}</strong></p>
                 <p class="timeline-desc" style="color:${item.color || '#1a1a1a'}">${item.descripcion}</p>
+                <a class="timeline-calendar-link" href="${buildCalendarUrl(item)}" target="_blank" rel="noopener noreferrer">
+                    <i class="ph ph-calendar-plus"></i> Agregar a mi calendario
+                </a>
             </div>
         </div>`
     ).join('');
+}
 
+function renderItinerary(itinerario, subtitulos) {
+    if (!itinerario?.length) return;
+
+    const tiposPresentes = ['todos', ...new Set(itinerario.map(i => i.tipo || 'general'))];
+    const filtersEl = document.getElementById('itinerary-filters');
+    if (filtersEl && tiposPresentes.length > 2) {
+        filtersEl.innerHTML = tiposPresentes.map(tipo =>
+            `<button type="button" class="itinerary-filter-btn${tipo === 'todos' ? ' active' : ''}" data-tipo="${tipo}">${tipo === 'todos' ? 'Todos' : (ITINERARY_TIPO_LABELS[tipo] || tipo)}</button>`
+        ).join('');
+        filtersEl.querySelectorAll('.itinerary-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                filtersEl.querySelectorAll('.itinerary-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderItineraryList(itinerario, btn.getAttribute('data-tipo'));
+            });
+        });
+    }
+
+    renderItineraryList(itinerario, 'todos');
     setSubtitles('itinerary', subtitulos);
+}
+
+function renderGaleria(galeria, subtitulos, config) {
+    setSubtitles('galeria', subtitulos);
+
+    const grid = document.getElementById('galeria-grid');
+    if (grid && galeria?.length) {
+        grid.innerHTML = galeria.map((item, idx) => `
+            <div class="galeria-item galeria-item-${item.tipo}" data-idx="${idx}">
+                <img src="${item.url}" alt="${item.titulo || 'Galería Sazón Córdoba'}" loading="lazy">
+                ${item.tipo === 'video' ? '<div class="galeria-play"><i class="ph ph-play-circle"></i></div>' : ''}
+                ${item.titulo ? `<div class="galeria-overlay"><span>${item.titulo}</span>${item.edicion ? `<small>${item.edicion}</small>` : ''}</div>` : ''}
+            </div>
+        `).join('');
+
+        grid.querySelectorAll('.galeria-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const item = galeria[parseInt(el.getAttribute('data-idx'), 10)];
+                if (item.tipo === 'video') {
+                    window.open(item.url, '_blank', 'noopener,noreferrer');
+                } else {
+                    openDishLightbox(item.url, item.titulo || '', item.edicion || '');
+                }
+            });
+        });
+    }
+
+    const socialsEl = document.getElementById('galeria-socials');
+    if (socialsEl) {
+        const links = [];
+        if (config?.social_instagram_url) links.push(`<a href="${config.social_instagram_url}" target="_blank" rel="noopener noreferrer"><i class="ph ph-instagram-logo"></i> Instagram</a>`);
+        if (config?.social_facebook_url) links.push(`<a href="${config.social_facebook_url}" target="_blank" rel="noopener noreferrer"><i class="ph ph-facebook-logo"></i> Facebook</a>`);
+        socialsEl.innerHTML = links.join('');
+    }
+}
+
+function renderContacto(subtitulos, config) {
+    setSubtitles('contacto', subtitulos);
+    const map = document.getElementById('contacto-map');
+    if (map && config?.evento_mapa_embed_url) {
+        map.src = config.evento_mapa_embed_url;
+    }
+}
+
+async function submitPublicForm(form, route, msgEl, successMsg) {
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    msgEl.textContent = '';
+    msgEl.className = 'form-message';
+
+    try {
+        const res = await fetch(`api/index.php?route=${route}`, { method: 'POST', body: new FormData(form) });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+            msgEl.textContent = data.error || 'Ocurrió un error. Intenta de nuevo.';
+            msgEl.classList.add('form-message-error');
+            return;
+        }
+        msgEl.textContent = successMsg;
+        msgEl.classList.add('form-message-success');
+        form.reset();
+    } catch (e) {
+        msgEl.textContent = 'Error de conexión. Intenta de nuevo.';
+        msgEl.classList.add('form-message-error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+function initPublicForms() {
+    const tabVisitante = document.getElementById('tabVisitante');
+    const tabExpositor = document.getElementById('tabExpositor');
+    const formVisitante = document.getElementById('formVisitante');
+    const formExpositor = document.getElementById('formExpositor');
+
+    tabVisitante?.addEventListener('click', () => {
+        tabVisitante.classList.add('active');
+        tabExpositor.classList.remove('active');
+        formVisitante.classList.add('active');
+        formExpositor.classList.remove('active');
+    });
+    tabExpositor?.addEventListener('click', () => {
+        tabExpositor.classList.add('active');
+        tabVisitante.classList.remove('active');
+        formExpositor.classList.add('active');
+        formVisitante.classList.remove('active');
+    });
+
+    formVisitante?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitPublicForm(formVisitante, 'registro_visitante', document.getElementById('msgVisitante'), '¡Registro exitoso! Revisa tu correo para la confirmación.');
+    });
+
+    formExpositor?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitPublicForm(formExpositor, 'registro_expositor', document.getElementById('msgExpositor'), '¡Postulación enviada! Te contactaremos pronto.');
+    });
+
+    const formContacto = document.getElementById('formContacto');
+    formContacto?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitPublicForm(formContacto, 'contacto', document.getElementById('msgContacto'), '¡Mensaje enviado! Te responderemos pronto.');
+    });
 }
 
 function renderSponsors(patrocinadores, subtitulos) {
@@ -606,6 +905,10 @@ function renderFooterCol(items, type, globalColor, menuNav) {
             const c = item.color || globalColor;
             content += `<li><a href="${item.enlace}"${c ? ` style="color:${c}"` : ''}>${item.etiqueta}</a></li>`;
         });
+        items.filter(i => i.tipo === 'enlace' && !i.titulo).forEach(item => {
+            const c = item.color || globalColor;
+            content += `<li><a href="${item.url}"${c ? ` style="color:${c}"` : ''}>${item.contenido || item.url}</a></li>`;
+        });
         content += `</ul>`;
     } else {
         className = 'footer-contact';
@@ -665,6 +968,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .finally(() => {
             document.getElementById('pageLoader')?.classList.add('loaded');
         });
+
+    initPublicForms();
 
     const navbar = document.getElementById('navbar');
     const scrollProgress = document.getElementById('scrollProgress');

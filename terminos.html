@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones | Sazón Córdoba</title>
+    <meta name="robots" content="noindex">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="./css/style.css?v=16">
+    <style>
+        .terminos-wrapper { max-width: 860px; margin: 0 auto; padding: 160px 24px 100px; }
+        .terminos-wrapper h1 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; margin-bottom: 24px; color: var(--text-main); }
+        .terminos-content { white-space: pre-wrap; line-height: 1.8; color: var(--text-muted); font-size: 1.05rem; }
+        .terminos-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 32px; color: var(--primary); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="page-loader" id="pageLoader">
+        <div class="page-loader-spinner"></div>
+    </div>
+
+    <nav id="navbar" class="navbar scrolled">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img alt="Sazón Córdoba" class="brand-logo">
+            </a>
+        </div>
+    </nav>
+
+    <main class="terminos-wrapper">
+        <a href="index.html" class="terminos-back"><i class="ph ph-arrow-left"></i> Volver al inicio</a>
+        <h1>Términos y Condiciones</h1>
+        <div class="terminos-content" id="terminos-content">Cargando...</div>
+    </main>
+
+    <script>
+        async function loadTerminos() {
+            try {
+                const res = await fetch('api/index.php?route=terminos');
+                const data = await res.json();
+                document.getElementById('terminos-content').textContent = data.contenido || 'Contenido no disponible.';
+            } catch (e) {
+                document.getElementById('terminos-content').textContent = 'No se pudo cargar el contenido. Intenta de nuevo más tarde.';
+            } finally {
+                document.getElementById('pageLoader')?.classList.add('loaded');
+            }
+        }
+
+        async function loadLogo() {
+            try {
+                const res = await fetch('api/index.php?route=nav');
+                const data = await res.json();
+                const logo = document.querySelector('.brand-logo');
+                if (logo && data.configuraciones?.logo_nav) {
+                    logo.src = data.configuraciones.logo_nav;
+                    logo.classList.add('loaded');
+                }
+            } catch (e) { /* silencioso: la marca de agua del nav no es crítica */ }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTerminos();
+            loadLogo();
+        });
+    </script>
+</body>
+</html>
