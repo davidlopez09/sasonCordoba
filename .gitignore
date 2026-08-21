@@ -1,3 +1,4 @@
 api/config.php
 docs/superpowers
 .env
+vendor/
