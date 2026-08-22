@@ -11,4 +11,9 @@ class EloquentExhibitorRepository implements ExhibitorRepositoryInterface
     {
         return (bool) RegistroExpositor::create($data);
     }
+
+    public function getAll(): array
+    {
+        return RegistroExpositor::orderBy('created_at', 'desc')->get()->toArray();
+    }
 }

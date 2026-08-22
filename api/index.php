@@ -62,7 +62,16 @@ try {
 
         $storageService = new \App\Infrastructure\Services\SupabaseStorageService($config);
 
-        if ($resource === 'exponentes') {
+        if ($resource === 'export') {
+            $visitorRepo = new \App\Infrastructure\Repositories\EloquentVisitorRepository();
+            $exhibitorRepo = new \App\Infrastructure\Repositories\EloquentExhibitorRepository();
+            
+            $adminController = new \App\Presentation\AdminExportController(
+                new \App\Application\Admin\Export\ExportVisitorsUseCase($visitorRepo),
+                new \App\Application\Admin\Export\ExportExhibitorsUseCase($exhibitorRepo)
+            );
+            $adminController->handleRequest($method, $pathParts);
+        } elseif ($resource === 'exponentes') {
             $repo = new \App\Infrastructure\Repositories\EloquentExponenteRepository();
             $adminController = new \App\Presentation\AdminExponentesController(
                 new \App\Application\Admin\Exponente\CreateExponenteUseCase($repo, $storageService),

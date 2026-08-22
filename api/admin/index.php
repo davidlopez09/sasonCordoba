@@ -120,24 +120,6 @@ $orderTables = [
 
 $action = $_GET['action'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && in_array($action, ['export_visitantes', 'export_expositores'], true)) {
-    $exportMap = [
-        'export_visitantes' => ['table' => 'registros_visitantes', 'cols' => ['id', 'nombre', 'correo', 'telefono', 'created_at'], 'filename' => 'registros_visitantes.csv'],
-        'export_expositores' => ['table' => 'registros_expositores', 'cols' => ['id', 'nombre_empresa', 'categoria', 'nombre_contacto', 'correo', 'telefono', 'descripcion', 'created_at'], 'filename' => 'registros_expositores.csv'],
-    ];
-    $cfg = $exportMap[$action];
-    $rows = $db->query("SELECT * FROM {$cfg['table']} ORDER BY created_at DESC")->fetchAll();
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="' . $cfg['filename'] . '"');
-    $out = fopen('php://output', 'w');
-    fputs($out, "\xEF\xBB\xBF");
-    fputcsv($out, $cfg['cols']);
-    foreach ($rows as $row) {
-        fputcsv($out, array_map(fn($c) => $row[$c] ?? '', $cfg['cols']));
-    }
-    fclose($out);
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action) {
     header('Content-Type: application/json');
@@ -1211,8 +1193,8 @@ const pageTitles = {
 };
 
 const canExport = {
-    registros_visitantes: 'export_visitantes',
-    registros_expositores: 'export_expositores',
+    registros_visitantes: '../api/admin/export/visitors',
+    registros_expositores: '../api/admin/export/exhibitors',
 };
 
 const canAdd = {
@@ -1295,7 +1277,7 @@ function showSection(section) {
     const exportBtn = document.getElementById('btnExport');
     if (canExport[section]) {
         exportBtn.style.display = 'inline-flex';
-        exportBtn.href = '?action=' + canExport[section];
+        exportBtn.href = canExport[section];
     } else {
         exportBtn.style.display = 'none';
     }
