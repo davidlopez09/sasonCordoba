@@ -93,7 +93,13 @@ try {
 
         $storageService = new \App\Infrastructure\Services\SupabaseStorageService($config);
 
-        if ($resource === 'export') {
+        if ($resource === 'settings') {
+            $settingRepo = new \App\Infrastructure\Repositories\EloquentSettingRepository();
+            $adminController = new \App\Presentation\AdminSettingsController(
+                new \App\Application\Admin\Setting\UpdateSettingUseCase($settingRepo, $storageService)
+            );
+            $adminController->handleRequest($method);
+        } elseif ($resource === 'export') {
             $visitorRepo = new \App\Infrastructure\Repositories\EloquentVisitorRepository();
             $exhibitorRepo = new \App\Infrastructure\Repositories\EloquentExhibitorRepository();
             
