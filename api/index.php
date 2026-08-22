@@ -49,8 +49,8 @@ try {
     $route = $_GET['route'] ?? '';
     
     // Manejar Autenticación
-    if (strpos($path, '/api/auth/') === 0) {
-        $pathParts = explode('/', trim($path, '/'));
+    if (strpos($path, '/api/auth/') !== false) {
+        $pathParts = explode('/', trim(strstr($path, '/api/'), '/'));
         $authController = new \App\Presentation\AuthController(
             new \App\Application\Auth\LoginUseCase($config['jwt']['secret'], $config['jwt']['expiration'])
         );
@@ -58,7 +58,7 @@ try {
     }
 
     // Rutas Administrativas
-    if (strpos($path, '/api/admin/') === 0) {
+    if (strpos($path, '/api/admin/') !== false) {
         $isAuthenticated = false;
 
         // 1. Intentar validar por sesión (legacy support)
@@ -88,7 +88,7 @@ try {
             exit;
         }
 
-        $pathParts = explode('/', trim($path, '/'));
+        $pathParts = explode('/', trim(strstr($path, '/api/'), '/'));
         $resource = $pathParts[2] ?? ''; // [0]=>api, [1]=>admin, [2]=>exponentes
 
         $storageService = new \App\Infrastructure\Services\SupabaseStorageService($config);
