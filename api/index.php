@@ -62,7 +62,7 @@ try {
         $isAuthenticated = false;
 
         // 1. Intentar validar por sesión (legacy support)
-        session_start();
+        session_start(['cookie_samesite' => 'Lax']);
         if (isset($_SESSION['admin']) && $_SESSION['admin'] === true) {
             $isAuthenticated = true;
         }

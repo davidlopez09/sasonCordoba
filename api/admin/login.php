@@ -1,5 +1,5 @@
 <?php
-session_start();
+session_start(['cookie_samesite' => 'Lax']);
 require __DIR__ . '/../db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
