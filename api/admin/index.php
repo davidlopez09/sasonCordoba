@@ -1457,13 +1457,14 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
         let endpointUrl = '?action=' + formData.get('action');
         let requestOptions = { method: 'POST', body: formData };
 
-        // [MODIFICACION CLEAN ARCHITECTURE: EXPONENTES]
-        if (actionSection === 'exponentes') {
+        // [MODIFICACION CLEAN ARCHITECTURE: MULTIPLES MODULOS]
+        const cleanArchModules = ['exponentes', 'platillos', 'itinerario', 'patrocinadores', 'slides', 'botones_hero', 'badges', 'menu_nav', 'botones_nav', 'faq', 'caracteristicas', 'estadisticas', 'footer', 'secciones_dinamicas', 'bloques_dinamicos', 'botones_participa', 'directorio', 'galeria'];
+        if (cleanArchModules.includes(actionSection)) {
             const expId = formData.get('id');
             if (currentMode === 'add') {
-                endpointUrl = '../api/admin/exponentes';
+                endpointUrl = '../api/admin/' + actionSection;
             } else {
-                endpointUrl = '../api/admin/exponentes/' + expId;
+                endpointUrl = '../api/admin/' + actionSection + '/' + expId;
                 formData.set('_method', 'PUT');
             }
         }
@@ -1514,9 +1515,10 @@ async function deleteItem(section, id) {
         let endpointUrl = '?action=' + fd.get('action');
         let requestOptions = { method: 'POST', body: fd };
 
-        // [MODIFICACION CLEAN ARCHITECTURE: EXPONENTES]
-        if (section === 'exponentes') {
-            endpointUrl = '../api/admin/exponentes/' + id;
+        // [MODIFICACION CLEAN ARCHITECTURE: MULTIPLES MODULOS]
+        const cleanArchModules = ['exponentes', 'platillos', 'itinerario', 'patrocinadores', 'slides', 'botones_hero', 'badges', 'menu_nav', 'botones_nav', 'faq', 'caracteristicas', 'estadisticas', 'footer', 'secciones_dinamicas', 'bloques_dinamicos', 'botones_participa', 'directorio', 'galeria'];
+        if (cleanArchModules.includes(section)) {
+            endpointUrl = '../api/admin/' + section + '/' + id;
             requestOptions = { method: 'DELETE' };
         }
 
