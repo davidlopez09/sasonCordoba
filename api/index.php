@@ -48,10 +48,41 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $route = $_GET['route'] ?? '';
     
+    // Manejar Autenticación
+    if (strpos($path, '/api/auth/') === 0) {
+        $pathParts = explode('/', trim($path, '/'));
+        $authController = new \App\Presentation\AuthController(
+            new \App\Application\Auth\LoginUseCase($config['jwt']['secret'], $config['jwt']['expiration'])
+        );
+        $authController->handleRequest($method, $pathParts);
+    }
+
     // Rutas Administrativas
     if (strpos($path, '/api/admin/') === 0) {
+        $isAuthenticated = false;
+
+        // 1. Intentar validar por sesión (legacy support)
         session_start();
-        if (!isset($_SESSION['admin'])) {
+        if (isset($_SESSION['admin']) && $_SESSION['admin'] === true) {
+            $isAuthenticated = true;
+        }
+
+        // 2. Intentar validar por JWT (nueva arquitectura)
+        if (!$isAuthenticated) {
+            $headers = getallheaders();
+            $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+            if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                try {
+                    $token = $matches[1];
+                    \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($config['jwt']['secret'], 'HS256'));
+                    $isAuthenticated = true;
+                } catch (Exception $e) {
+                    // Token inválido
+                }
+            }
+        }
+
+        if (!$isAuthenticated) {
             http_response_code(401);
             echo json_encode(['error' => 'No autorizado']);
             exit;

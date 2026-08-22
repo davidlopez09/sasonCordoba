@@ -5,7 +5,8 @@
     "require": {
         "php": ">=7.4",
         "illuminate/database": "^8.0",
-        "robmorgan/phinx": "^0.14.0"
+        "robmorgan/phinx": "^0.14.0",
+        "firebase/php-jwt": "^6.10"
     },
     "autoload": {
         "psr-4": {
