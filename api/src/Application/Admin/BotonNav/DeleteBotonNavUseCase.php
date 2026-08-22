@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Application\Admin\BotonNav;
+
+use App\Domain\Interfaces\BotonNavRepositoryInterface;
+use Exception;
+
+class DeleteBotonNavUseCase
+{
+    private $repository;
+
+    public function __construct(BotonNavRepositoryInterface $repository)
+    {
+        $this->repository = $repository;
+    }
+
+    public function execute(int $id): void
+    {
+        $current = $this->repository->getById($id);
+        if (!$current) throw new Exception("Registro no encontrado");
+
+
+        $oldOrden = (int) $current['orden'];
+        $this->repository->delete($id);
+        $this->repository->shiftForDelete($oldOrden);
+    }
+}
