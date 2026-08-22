@@ -1454,7 +1454,21 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
 
     formData.set('action', currentMode === 'add' ? 'add_' + actionSection : (saveActions[currentSection] || 'edit_' + actionSection));
     try {
-        const res = await fetch('?action=' + formData.get('action'), { method:'POST', body: formData });
+        let endpointUrl = '?action=' + formData.get('action');
+        let requestOptions = { method: 'POST', body: formData };
+
+        // [MODIFICACION CLEAN ARCHITECTURE: EXPONENTES]
+        if (actionSection === 'exponentes') {
+            const expId = formData.get('id');
+            if (currentMode === 'add') {
+                endpointUrl = '../api/admin/exponentes';
+            } else {
+                endpointUrl = '../api/admin/exponentes/' + expId;
+                formData.set('_method', 'PUT');
+            }
+        }
+
+        const res = await fetch(endpointUrl, requestOptions);
         const data = await res.json();
         hideLoader();
         if (data.ok) {
@@ -1497,7 +1511,16 @@ async function deleteItem(section, id) {
     fd.set('id', id);
     fd.set('action', 'delete_' + (section.startsWith('bloques_') ? 'bloques_dinamicos' : section));
     try {
-        const res = await fetch('?action=' + fd.get('action'), { method:'POST', body: fd });
+        let endpointUrl = '?action=' + fd.get('action');
+        let requestOptions = { method: 'POST', body: fd };
+
+        // [MODIFICACION CLEAN ARCHITECTURE: EXPONENTES]
+        if (section === 'exponentes') {
+            endpointUrl = '../api/admin/exponentes/' + id;
+            requestOptions = { method: 'DELETE' };
+        }
+
+        const res = await fetch(endpointUrl, requestOptions);
         const data = await res.json();
         hideLoader();
         if (data.ok) {

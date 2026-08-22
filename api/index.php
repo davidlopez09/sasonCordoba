@@ -47,8 +47,38 @@ try {
     $path = rtrim($path, '/');
     $method = $_SERVER['REQUEST_METHOD'];
     $route = $_GET['route'] ?? '';
+    
+    // Rutas Administrativas
+    if (strpos($path, '/api/admin/') === 0) {
+        session_start();
+        if (!isset($_SESSION['admin'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'No autorizado']);
+            exit;
+        }
 
-    // Manejar Petición
+        $pathParts = explode('/', trim($path, '/'));
+        $resource = $pathParts[2] ?? ''; // [0]=>api, [1]=>admin, [2]=>exponentes
+
+        if ($resource === 'exponentes') {
+            $storageService = new \App\Infrastructure\Services\SupabaseStorageService($config);
+            $expoRepo = new \App\Infrastructure\Repositories\EloquentExponenteRepository();
+            $adminController = new \App\Presentation\AdminExponentesController(
+                new \App\Application\Admin\Exponente\CreateExponenteUseCase($expoRepo, $storageService),
+                new \App\Application\Admin\Exponente\UpdateExponenteUseCase($expoRepo, $storageService),
+                new \App\Application\Admin\Exponente\DeleteExponenteUseCase($expoRepo, $storageService),
+                $expoRepo
+            );
+            $adminController->handleRequest($method, $pathParts);
+            exit;
+        }
+        
+        http_response_code(404);
+        echo json_encode(['error' => 'Endpoint de admin no encontrado']);
+        exit;
+    }
+
+    // Manejar Petición Pública
     $apiController->handleRequest($method, $path, $route);
 
 } catch (Exception $e) {
