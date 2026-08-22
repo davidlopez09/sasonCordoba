@@ -223,7 +223,7 @@ final class InitDatabaseSchema extends AbstractMigration
 
         // 22. Bloques Dinamicos
         $this->table('bloques_dinamicos')
-            ->addColumn('seccion_id', 'integer')
+            ->addColumn('seccion_id', 'integer', ['signed' => false])
             ->addColumn('tipo', 'string', ['limit' => 30])
             ->addColumn('posicion', 'string', ['limit' => 20, 'default' => 'completo'])
             ->addColumn('contenido', 'text')
