@@ -38,8 +38,8 @@ class DefaultDataSeeder extends AbstractSeed
         $this->table('usuarios')->insert([
             [
                 'nombre' => 'Administrador',
-                'correo' => 'admin@sazoncordoba.com',
-                'contrasena' => '$2y$10$e2nQfm7orYPgm2W3n6U9Jusm4eDzKx6sKt0x090Kzl/.1/ktnWK7W',
+                'correo' => 'joseangel191134@gmail.com',
+                'contrasena' => '$2a$10$j34DBvDQ93bicmKQwOyAv.VhVCo2h9V6bY9B5SybOlHwdq8fHBO32',
                 'rol' => 'admin'
             ]
         ])->saveData();
