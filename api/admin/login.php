@@ -3,6 +3,10 @@ session_start(['cookie_samesite' => 'Lax']);
 require __DIR__ . '/../db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_SERVER['HTTP_ORIGIN'])) {
+        header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+        header('Access-Control-Allow-Credentials: true');
+    }
     header('Content-Type: application/json');
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
