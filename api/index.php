@@ -50,7 +50,7 @@ try {
     
     // Manejar Autenticación
     if (strpos($path, '/api/auth/') !== false) {
-        $pathParts = explode('/', trim(strstr($path, '/api/'), '/'));
+        $pathParts = explode('/', trim(strstr($path, '/api/auth/'), '/'));
         $authController = new \App\Presentation\AuthController(
             new \App\Application\Auth\LoginUseCase($config['jwt']['secret'], $config['jwt']['expiration'])
         );
@@ -88,7 +88,7 @@ try {
             exit;
         }
 
-        $pathParts = explode('/', trim(strstr($path, '/api/'), '/'));
+        $pathParts = explode('/', trim(strstr($path, '/api/admin/'), '/'));
         $resource = $pathParts[2] ?? ''; // [0]=>api, [1]=>admin, [2]=>exponentes
 
         $storageService = new \App\Infrastructure\Services\SupabaseStorageService($config);

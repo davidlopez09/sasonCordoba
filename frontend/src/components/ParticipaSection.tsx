@@ -1,3 +1,5 @@
+import { resolveSiteUrl } from '@/lib/api';
+
 export default function ParticipaSection({ data }: { data: any, subtitle?: any }) {
   const s = data?.seccion;
   if (!s) return null;
@@ -12,7 +14,7 @@ export default function ParticipaSection({ data }: { data: any, subtitle?: any }
           
           <div className="participa-actions" id="participa-actions">
             {data.botones?.map((b: any) => (
-              <a key={b.id} href={b.enlace} className="btn btn-large" style={{ background: b.color_fondo, color: b.color_texto, borderColor: b.color_borde }}>
+              <a key={b.id} href={resolveSiteUrl(b.enlace)} className="btn btn-large" style={{ background: b.color_fondo, color: b.color_texto, borderColor: b.color_borde }}>
                 {b.texto}
               </a>
             ))}

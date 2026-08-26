@@ -9,6 +9,17 @@ const DISH_ETIQUETA_LABELS: Record<string, string> = {
     'vegano': 'Opción Vegana'
 };
 
+function formatTitleHtml(title: string | undefined, defaultHtml: string) {
+  if (!title) return defaultHtml;
+  if (title.includes('<')) return title.replace(/\n/g, '<br>');
+  const words = title.trim().split(/\s+/);
+  if (words.length > 1) {
+    const lastWord = words.pop();
+    return `${words.join(' ')} <span class="text-gradient">${lastWord}</span>`;
+  }
+  return title;
+}
+
 export default function ExponentesSection({ exponentes, platillos, subtitle, subtitleDishes }: { exponentes: any[], platillos: any[], subtitle: any, subtitleDishes: any }) {
   const [activeDish, setActiveDish] = useState<any>(null);
   
@@ -52,11 +63,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
   const nextSlide = () => {
     setCurrentIndex(prev => {
       let next = prev + 1;
-      // If we are reaching the end of the 4th set, quietly jump back to 2nd set
       if (next >= 4 * N) {
-        // We need a timeout to let the transition finish before jumping, 
-        // but for simplicity in React without ref-tricks, we just clamp it or let it run
-        // Actually, let's just let it be bounded to avoid complex silent jumps.
         return Math.min(next, itemsList.length - 1);
       }
       return next;
@@ -84,7 +91,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
       {/* Chefs Section */}
       <section id="chefs" className="section section-dark">
         <div className="container text-center">
-          <h2 className="section-title" data-aos="fade-up" id="chefs-title" dangerouslySetInnerHTML={{ __html: subtitle?.titulo?.replace(/\n/g, '<br>') || 'Exponentes <span class="text-gradient">Especiales</span>' }}></h2>
+          <h2 className="section-title" data-aos="fade-up" id="chefs-title" dangerouslySetInnerHTML={{ __html: formatTitleHtml(subtitle?.titulo, 'Exponentes <span class="text-gradient">Especiales</span>') }}></h2>
           <p className="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="chefs-subtitle">{subtitle?.subtitulo}</p>
           
           <div className="chefs-grid" id="chefs-grid">
@@ -110,7 +117,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
       {/* Platillos Destacados Section (Carrusel) */}
       <section id="dishes" className="section">
         <div className="container text-center">
-          <h2 className="section-title" data-aos="fade-up" id="dishes-title" dangerouslySetInnerHTML={{ __html: subtitleDishes?.titulo?.replace(/\n/g, '<br>') || 'Platillos <span class="text-gradient">Destacados</span>' }}></h2>
+          <h2 className="section-title" data-aos="fade-up" id="dishes-title" dangerouslySetInnerHTML={{ __html: formatTitleHtml(subtitleDishes?.titulo, 'Platillos <span class="text-gradient">Destacados</span>') }}></h2>
           <p className="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="dishes-subtitle">{subtitleDishes?.subtitulo}</p>
           
           <div className="dishes-slider-container" id="dishes-slider-container" data-aos="fade-up" data-aos-delay="200" ref={wrapperRef}>

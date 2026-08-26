@@ -24,7 +24,7 @@ export default function RegistroSection({ subtitle }: { subtitle: any }) {
           : '¡Postulación enviada! Te contactaremos pronto.';
 
     try {
-      const res = await fetch(`http://localhost/sazonCordoba/api/index.php?route=${route}`, {
+      const res = await fetch(`http://localhost/sasoncordoba/api/index.php?route=${route}`, {
         method: 'POST',
         body: new FormData(form),
       });
@@ -74,8 +74,6 @@ export default function RegistroSection({ subtitle }: { subtitle: any }) {
         <form 
           className={`registro-form ${activeTab === 'visitante' ? 'active' : ''}`} 
           id="formVisitante" 
-          data-aos="fade-up" 
-          data-aos-delay="200"
           onSubmit={(e) => handleSubmit(e, 'visitante')}
         >
           <div className="form-row">
@@ -90,8 +88,6 @@ export default function RegistroSection({ subtitle }: { subtitle: any }) {
         <form 
           className={`registro-form ${activeTab === 'expositor' ? 'active' : ''}`} 
           id="formExpositor" 
-          data-aos="fade-up" 
-          data-aos-delay="200"
           onSubmit={(e) => handleSubmit(e, 'expositor')}
         >
           <div className="form-row">

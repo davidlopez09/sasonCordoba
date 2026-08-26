@@ -53,7 +53,7 @@ class DefaultDataSeeder extends AbstractSeed
 
         // 3. Hero Texto
         $this->table('hero_texto')->insert([
-            ['texto_badge' => 'Edición 2026', 'titulo' => 'El Sabor que Enciende a Montería', 'subtitulo' => 'Descubre el evento culinario más prestigioso de la región.']
+            ['texto_badge' => 'Edición 2026', 'titulo' => 'El Sabor que Enciende a<br>Montería', 'subtitulo' => 'Descubre el evento culinario más prestigioso de la región y disfruta de una experiencia única llena de sabores, talento, tradición y propuestas gastronómicas que harán de este encuentro un momento inolvidable.']
         ])->saveData();
 
         // 4. Botones Hero
@@ -146,10 +146,8 @@ class DefaultDataSeeder extends AbstractSeed
 
         // 16. Pie de pagina
         $this->table('pie_pagina')->insert([
-            ['tipo' => 'texto', 'titulo' => 'Sazón Córdoba', 'contenido' => 'Una experiencia gastronómica sin igual en el corazón de Montería.', 'url' => null, 'icono' => null, 'columna' => '1', 'orden' => 0],
-            ['tipo' => 'red_social', 'titulo' => null, 'contenido' => null, 'url' => '#', 'icono' => 'ph-facebook-logo', 'columna' => '1', 'orden' => 1],
-            ['tipo' => 'red_social', 'titulo' => null, 'contenido' => null, 'url' => '#', 'icono' => 'ph-instagram-logo', 'columna' => '1', 'orden' => 2],
-            ['tipo' => 'red_social', 'titulo' => null, 'contenido' => null, 'url' => '#', 'icono' => 'ph-youtube-logo', 'columna' => '1', 'orden' => 3],
+            ['tipo' => 'texto', 'titulo' => null, 'contenido' => 'Una experiencia gastronómica sin igual en el corazón de Montería.', 'url' => null, 'icono' => null, 'columna' => '1', 'orden' => 0],
+            ['tipo' => 'texto', 'titulo' => null, 'contenido' => 'Síguenos en nuestras redes y no te pierdas ninguna novedad del evento.', 'url' => null, 'icono' => null, 'columna' => '1', 'orden' => 1],
             ['tipo' => 'enlace', 'titulo' => 'Acerca de', 'contenido' => null, 'url' => '#about', 'icono' => null, 'columna' => '2', 'orden' => 0],
             ['tipo' => 'enlace', 'titulo' => null, 'contenido' => 'Términos y Condiciones', 'url' => 'terminos.html', 'icono' => null, 'columna' => '2', 'orden' => 1],
             ['tipo' => 'texto', 'titulo' => 'Contacto', 'contenido' => 'Centro de Eventos, Montería', 'url' => null, 'icono' => 'ph-map-pin', 'columna' => '3', 'orden' => 0],
@@ -228,7 +226,8 @@ class DefaultDataSeeder extends AbstractSeed
             ['nombre' => 'Ron Córdoba Artesanal', 'categoria' => 'Bebidas', 'descripcion' => 'Destilería local con rones añejados y cócteles de autor a base de frutas de la región.', 'contacto' => 'roncordoba@example.com', 'orden' => 1],
             ['nombre' => 'Manos de Palma', 'categoria' => 'Artesanías', 'descripcion' => 'Tejidos en palma de iraca y caña flecha elaborados por artesanos de San Andrés de Sotavento.', 'contacto' => 'manosdepalma@example.com', 'orden' => 2],
             ['nombre' => 'Café Alto Sinú', 'categoria' => 'Bebidas', 'descripcion' => 'Café de origen cultivado en las estribaciones del Nudo de Paramillo, tueste artesanal.', 'contacto' => 'cafealtosinu@example.com', 'orden' => 3],
-            ['nombre' => 'Dulces de la Abuela', 'categoria' => 'Gastronomía', 'descripcion' => 'Repostería tradicional: alegrías, cocadas y dulce de mango biche.', 'contacto' => 'dulcesabuela@example.com', 'orden' => 4]
+            ['nombre' => 'Dulces de la Abuela', 'categoria' => 'Gastronomía', 'descripcion' => 'Repostería tradicional: alegrías, cocadas y dulce de mango biche.', 'contacto' => 'dulcesabuela@example.com', 'orden' => 4],
+            ['nombre' => 'Sabores del Caribe', 'categoria' => 'Gastronomía', 'descripcion' => 'Especialidades a la parrilla, chorizos artesanales, suero costeño y picadas tradicionales.', 'contacto' => 'saboresdelcaribe@example.com', 'orden' => 5]
         ])->saveData();
 
         // 24. Galeria Items

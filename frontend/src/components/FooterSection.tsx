@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
+import { resolveSiteUrl } from '@/lib/api';
 
 export default function FooterSection({ data, config, navData }: { data: any[], config: any, navData: any[] }) {
   const footerRef = useRef<HTMLElement>(null);
@@ -20,17 +21,24 @@ export default function FooterSection({ data, config, navData }: { data: any[], 
 
   const renderCol1 = () => {
     if (!col1.length) return null;
+    const socialItems = col1.filter(i => i.tipo === 'red_social' && (i.icono || (i.url && i.url !== '#')));
     return (
       <div className="footer-brand">
         {col1.filter(i => i.tipo === 'texto').map((item, idx) => {
           const c = item.color || globalColor;
-          return <p key={idx} style={{ color: c }}>{item.contenido}</p>;
+          return (
+            <p key={idx} style={{ color: c, margin: '0 0 16px 0', fontSize: '0.95rem', lineHeight: '1.6', maxWidth: '340px' }}>
+              {item.contenido}
+            </p>
+          );
         })}
-        <div className="footer-socials">
-          {col1.filter(i => i.tipo === 'red_social').map((item, idx) => (
-            <a key={idx} href={item.url || '#'}><i className={item.icono}></i></a>
-          ))}
-        </div>
+        {socialItems.length > 0 && (
+          <div className="footer-socials">
+            {socialItems.map((item, idx) => (
+              <a key={idx} href={resolveSiteUrl(item.url)}><i className={item.icono}></i></a>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -45,11 +53,11 @@ export default function FooterSection({ data, config, navData }: { data: any[], 
         <ul>
           {navData?.map((item: any, idx: number) => {
             const c = item.color || globalColor;
-            return <li key={idx}><a href={item.enlace} style={{ color: c }}>{item.etiqueta}</a></li>;
+            return <li key={idx}><a href={resolveSiteUrl(item.enlace)} style={{ color: c }}>{item.etiqueta}</a></li>;
           })}
           {col2.filter(i => i.tipo === 'enlace' && !i.titulo).map((item, idx) => {
             const c = item.color || globalColor;
-            return <li key={`link-${idx}`}><a href={item.url} style={{ color: c }}>{item.contenido}</a></li>;
+            return <li key={`link-${idx}`}><a href={resolveSiteUrl(item.url)} style={{ color: c }}>{item.contenido}</a></li>;
           })}
         </ul>
       </div>

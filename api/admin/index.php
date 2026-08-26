@@ -1193,8 +1193,8 @@ const pageTitles = {
 };
 
 const canExport = {
-    registros_visitantes: '../api/admin/export/visitors',
-    registros_expositores: '../api/admin/export/exhibitors',
+    registros_visitantes: '../admin/export/visitors',
+    registros_expositores: '../admin/export/exhibitors',
 };
 
 const canAdd = {
@@ -1445,13 +1445,13 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
         if (cleanArchModules.includes(actionSection)) {
             const expId = formData.get('id');
             if (currentMode === 'add') {
-                endpointUrl = '../api/admin/' + actionSection;
+                endpointUrl = '../admin/' + actionSection;
             } else {
-                endpointUrl = '../api/admin/' + actionSection + '/' + expId;
+                endpointUrl = '../admin/' + actionSection + '/' + expId;
                 formData.set('_method', 'PUT');
             }
         } else if (['about', 'hero_texto', 'identidad', 'subtitulos', 'configuraciones', 'nav_apariencia', 'footer_apariencia', 'secciones_visibilidad', 'participa', 'terminos'].includes(currentSection)) {
-            endpointUrl = '../api/admin/settings';
+            endpointUrl = '../admin/settings';
             requestOptions = { method: 'POST', body: formData };
         }
 
@@ -1504,7 +1504,7 @@ async function deleteItem(section, id) {
         // [MODIFICACION CLEAN ARCHITECTURE: MULTIPLES MODULOS]
         const cleanArchModules = ['exponentes', 'platillos', 'itinerario', 'patrocinadores', 'slides', 'botones_hero', 'badges', 'menu_nav', 'botones_nav', 'faq', 'caracteristicas', 'estadisticas', 'footer', 'secciones_dinamicas', 'bloques_dinamicos', 'botones_participa', 'directorio', 'galeria'];
         if (cleanArchModules.includes(section)) {
-            endpointUrl = '../api/admin/' + section + '/' + id;
+            endpointUrl = '../admin/' + section + '/' + id;
             requestOptions = { method: 'DELETE' };
         }
 
