@@ -3,6 +3,13 @@
 import { useEffect, useRef } from 'react';
 import { resolveSiteUrl } from '@/lib/api';
 
+const getIconClass = (icon: string) => {
+  if (!icon) return '';
+  if (icon.startsWith('ph ')) return icon;
+  if (icon.startsWith('ph-')) return `ph ${icon}`;
+  return `ph ph-${icon}`;
+};
+
 export default function FooterSection({ data, config, navData }: { data: any[], config: any, navData: any[] }) {
   const footerRef = useRef<HTMLElement>(null);
 
@@ -24,10 +31,13 @@ export default function FooterSection({ data, config, navData }: { data: any[], 
     const socialItems = col1.filter(i => i.tipo === 'red_social' && (i.icono || (i.url && i.url !== '#')));
     return (
       <div className="footer-brand">
+        {config?.logo_nav && (
+          <img src={config.logo_nav} alt="Sazón Córdoba" className="footer-logo" loading="lazy" />
+        )}
         {col1.filter(i => i.tipo === 'texto').map((item, idx) => {
           const c = item.color || globalColor;
           return (
-            <p key={idx} style={{ color: c, margin: '0 0 16px 0', fontSize: '0.95rem', lineHeight: '1.6', maxWidth: '340px' }}>
+            <p key={idx} className={idx === 0 ? 'footer-tagline' : 'footer-note'} style={{ color: idx === 0 && !c ? undefined : c }}>
               {item.contenido}
             </p>
           );
@@ -35,7 +45,7 @@ export default function FooterSection({ data, config, navData }: { data: any[], 
         {socialItems.length > 0 && (
           <div className="footer-socials">
             {socialItems.map((item, idx) => (
-              <a key={idx} href={resolveSiteUrl(item.url)}><i className={item.icono}></i></a>
+              <a key={idx} href={resolveSiteUrl(item.url)} aria-label="Red social"><i className={getIconClass(item.icono)}></i></a>
             ))}
           </div>
         )}
@@ -76,7 +86,7 @@ export default function FooterSection({ data, config, navData }: { data: any[], 
             const c = item.color || globalColor;
             return (
               <li key={idx} style={{ color: c }}>
-                {item.icono && <i className={item.icono}></i>} {item.contenido}
+                {item.icono && <i className={getIconClass(item.icono)}></i>} {item.contenido}
               </li>
             );
           })}
