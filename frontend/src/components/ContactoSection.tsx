@@ -15,7 +15,7 @@ export default function ContactoSection({ subtitle, config }: { subtitle: any, c
     msgEl.className = 'form-message';
 
     try {
-      const res = await fetch('http://localhost/sasoncordoba/api/index.php?route=contacto', {
+      const res = await fetch('/sazon-cordoba/api/index.php?route=contacto', {
         method: 'POST',
         body: new FormData(form),
       });

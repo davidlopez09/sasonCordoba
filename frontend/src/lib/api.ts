@@ -1,4 +1,4 @@
-export const SITE_BASE_URL = 'http://localhost/sasoncordoba';
+export const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || '/sazon-cordoba';
 
 export function resolveSiteUrl(enlace?: string | null): string {
   if (!enlace) return '#';
@@ -7,11 +7,19 @@ export function resolveSiteUrl(enlace?: string | null): string {
 }
 
 export async function fetchSiteData() {
-  const res = await fetch('http://localhost/sasoncordoba/api/site', {
-    next: { revalidate: 60 } // ISR: Revalidate every 60 seconds
-  });
-  if (!res.ok) {
-    throw new Error('Failed to fetch site data');
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1/sazon-cordoba/api';
+    const res = await fetch(`${apiUrl}/site`, {
+      next: { revalidate: 60 }
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`API Error: ${res.status} - ${text}`);
+      throw new Error(`Failed to fetch site data: ${res.status}`);
+    }
+    return res.json();
+  } catch (err) {
+    console.error('Fetch exception:', err);
+    throw err;
   }
-  return res.json();
 }

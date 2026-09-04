@@ -12,8 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     $db = getDB();
-    $stmt = $db->prepare("SELECT id, contrasena, rol FROM usuarios WHERE correo = ?");
-    $stmt->execute([$username]);
+    $stmt = $db->prepare("SELECT id, contrasena, rol FROM usuarios WHERE correo = ? OR nombre = ?");
+    $stmt->execute([$username, $username]);
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['contrasena']) && $user['rol'] === 'admin') {
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="error" id="loginError"></div>
         <form id="loginForm" method="POST">
             <div class="form-group">
-                <label for="username">Usuario</label>
+                <label for="username">Usuario o Correo</label>
                 <input type="text" id="username" name="username" required autocomplete="username">
             </div>
             <div class="form-group">

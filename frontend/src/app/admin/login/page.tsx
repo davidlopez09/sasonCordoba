@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
       formData.append('username', username);
       formData.append('password', password);
 
-      const res = await fetch('http://localhost/sasoncordoba/api/admin/login.php', {
+      const res = await fetch('/sazon-cordoba/api/admin/login.php', {
         method: 'POST',
         body: formData,
         credentials: 'include' // Ensures the PHPSESSID cookie is set in the browser
@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       
       if (data.ok) {
         // Redirect directly to the PHP admin panel!
-        window.location.href = 'http://localhost/sasoncordoba/api/admin/index.php';
+        window.location.href = '/sazon-cordoba/api/admin/index.php';
       } else {
         setError(data.error || 'Usuario o contraseña incorrectos');
       }
@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f6f8' }}>
       <div style={{ background: '#fff', padding: '48px 40px', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', width: '100%', maxWidth: '420px', textAlign: 'center' }}>
-        <img src="http://localhost/sasoncordoba/img/logos/logosason.jpg" alt="Sazón Córdoba" style={{ maxHeight: '60px', margin: '0 auto 24px', borderRadius: '8px' }} />
+        <img src="/sazon-cordoba/img/logos/logosason.jpg" alt="Sazón Córdoba" style={{ maxHeight: '60px', margin: '0 auto 24px', borderRadius: '8px' }} />
         <h1 style={{ fontSize: '1.5rem', marginBottom: '8px', color: '#1a1a1a', fontWeight: 'bold' }}>Panel de Administración</h1>
         <p style={{ color: '#5a6066', marginBottom: '32px', fontSize: '0.95rem' }}>Ingresa para gestionar el contenido del sitio</p>
         
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px', textAlign: 'left' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: '#5a6066' }}>Usuario</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px', color: '#5a6066' }}>Usuario o Correo</label>
             <input 
               type="text" 
               required 
