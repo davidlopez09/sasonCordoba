@@ -41,7 +41,19 @@ class DefaultDataSeeder extends AbstractSeed
                 'correo' => 'joseangel191134@gmail.com',
                 'contrasena' => '$2a$10$j34DBvDQ93bicmKQwOyAv.VhVCo2h9V6bY9B5SybOlHwdq8fHBO32',
                 'rol' => 'admin'
-            ]
+            ],
+            [
+                'nombre' => 'CamaraMonteria',
+                'correo' => 'jhernandez@ccmonteria.org.co',
+                'contrasena' => '$2a$12$lK4W1PAsSB6f/ImS80bgWerBNsb/VEThMQYjfJuErpDY6ACrdGn9C',
+                'rol' => 'admin'
+            ],
+            [
+                'nombre' => 'Alvaro',
+                'correo' => 'ceo@baggi.co',
+                'contrasena' => '$2a$12$7GGGySNQaGWImrKTDfye4eiqtL9g9oTqnXEgOVP5o3GtQIB5/knou',
+                'rol' => 'admin'
+            ],
         ])->saveData();
 
         // 2. Banner Principal
