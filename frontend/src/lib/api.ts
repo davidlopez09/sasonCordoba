@@ -3,6 +3,14 @@ export const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || '/sazon-cordoba
 export function resolveSiteUrl(enlace?: string | null): string {
   if (!enlace) return '#';
   if (/^(https?:\/\/|#|mailto:|tel:)/.test(enlace)) return enlace;
+  
+  // Si el enlace apunta a la API, usa NEXT_PUBLIC_API_URL
+  if (enlace.startsWith('api/')) {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/sazon-cordoba/api';
+    // Removemos 'api/' del inicio ya que apiUrl ya contiene '/api'
+    return `${apiUrl}/${enlace.substring(4)}`;
+  }
+  
   return `${SITE_BASE_URL}/${enlace.replace(/^\/+/, '')}`;
 }
 

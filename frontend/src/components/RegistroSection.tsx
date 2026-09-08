@@ -24,7 +24,8 @@ export default function RegistroSection({ subtitle }: { subtitle: any }) {
           : '¡Postulación enviada! Te contactaremos pronto.';
 
     try {
-      const res = await fetch(`/sazon-cordoba/api/index.php?route=${route}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/sazon-cordoba/api';
+      const res = await fetch(`${apiUrl}/index.php?route=${route}`, {
         method: 'POST',
         body: new FormData(form),
       });

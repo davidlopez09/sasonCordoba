@@ -18,7 +18,8 @@ export default function AdminLoginPage() {
       formData.append('username', username);
       formData.append('password', password);
 
-      const res = await fetch('/sazon-cordoba/api/admin/login.php', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/sazon-cordoba/api';
+      const res = await fetch(`${apiUrl}/admin/login.php`, {
         method: 'POST',
         body: formData,
         credentials: 'include' // Ensures the PHPSESSID cookie is set in the browser
@@ -28,7 +29,7 @@ export default function AdminLoginPage() {
       
       if (data.ok) {
         // Redirect directly to the PHP admin panel!
-        window.location.href = '/sazon-cordoba/api/admin/index.php';
+        window.location.href = `${apiUrl}/admin/index.php`;
       } else {
         setError(data.error || 'Usuario o contraseña incorrectos');
       }
