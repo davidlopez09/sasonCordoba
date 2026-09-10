@@ -29,6 +29,11 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
   const [isMobile, setIsMobile] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Touch Swipe State
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [windowWidth, setWindowWidth] = useState(1200);
+
   const list = (platillos && platillos.length > 0) ? platillos : [];
   const N = list.length || 1;
   
@@ -42,11 +47,15 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
 
   useEffect(() => {
     const handleResize = () => {
-      if (wrapperRef.current) setWrapperWidth(wrapperRef.current.offsetWidth);
-      setIsMobile(window.innerWidth <= 768);
+      if (wrapperRef.current) {
+        setWrapperWidth(wrapperRef.current.clientWidth);
+      }
+      const w = window.innerWidth;
+      setWindowWidth(w);
+      setIsMobile(w <= 768);
     };
-    window.addEventListener('resize', handleResize);
     handleResize(); // Initial call
+    window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -64,7 +73,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
     setCurrentIndex(prev => {
       let next = prev + 1;
       if (next >= 4 * N) {
-        return Math.min(next, itemsList.length - 1);
+        return 2 * N;
       }
       return next;
     });
@@ -74,16 +83,34 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
     setCurrentIndex(prev => {
       let next = prev - 1;
       if (next < N) {
-        return Math.max(0, next);
+        return 3 * N - 1;
       }
       return next;
     });
   };
 
-  const cardWidth = isMobile ? 280 : 360;
-  const cardGap = 30;
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 35;
+    if (distance > minSwipeDistance) nextSlide();
+    if (distance < -minSwipeDistance) prevSlide();
+  };
+
+  const currentWrapperWidth = wrapperWidth > 0 ? wrapperWidth : (typeof window !== 'undefined' ? window.innerWidth : 360);
+  const cardWidth = windowWidth <= 380 ? 260 : (isMobile ? 280 : 360);
+  const cardGap = isMobile ? 18 : 30;
   const step = cardWidth + cardGap;
-  const centerOffset = (wrapperWidth / 2) - (cardWidth / 2);
+  const centerOffset = (currentWrapperWidth / 2) - (cardWidth / 2);
   const translateX = centerOffset - (currentIndex * step);
 
   return (
@@ -120,15 +147,40 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
           <h2 className="section-title" data-aos="fade-up" id="dishes-title" dangerouslySetInnerHTML={{ __html: formatTitleHtml(subtitleDishes?.titulo, 'Platillos <span class="text-gradient">Destacados</span>') }}></h2>
           <p className="section-subtitle" data-aos="fade-up" data-aos-delay="100" id="dishes-subtitle">{subtitleDishes?.subtitulo}</p>
           
-          <div className="dishes-slider-container" id="dishes-slider-container" data-aos="fade-up" data-aos-delay="200" ref={wrapperRef}>
+          <div 
+            className="dishes-slider-container" 
+            id="dishes-slider-container" 
+            data-aos="fade-up" 
+            data-aos-delay="200" 
+            ref={wrapperRef}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             <button className="slider-arrow slider-prev" id="dishSliderPrev" aria-label="Anterior" onClick={prevSlide}><i className="ph ph-caret-left"></i></button>
-            <div className="dishes-slider-track" id="dishes-slider-track" style={{ transform: `translateX(${translateX}px)` }}>
+            <div 
+              className="dishes-slider-track" 
+              id="dishes-slider-track" 
+              style={{ 
+                transform: `translateX(${translateX}px)`,
+                gap: `${cardGap}px`
+              }}
+            >
               {itemsList.map((dish: any, idx: number) => {
                 const isCenter = idx === currentIndex;
                 const etiquetaLabel = dish.etiqueta ? DISH_ETIQUETA_LABELS[dish.etiqueta] : null;
                 
                 return (
-                  <div key={`${dish.id}-${idx}`} className={`dish-item ${isCenter ? 'center-active' : ''}`} onClick={() => setActiveDish(dish)}>
+                  <div 
+                    key={`${dish.id}-${idx}`} 
+                    className={`dish-item ${isCenter ? 'center-active' : ''}`} 
+                    onClick={() => setActiveDish(dish)}
+                    style={{
+                      width: `${cardWidth}px`,
+                      minWidth: `${cardWidth}px`,
+                      flex: `0 0 ${cardWidth}px`
+                    }}
+                  >
                     {etiquetaLabel && <span className={`dish-badge dish-badge-${dish.etiqueta}`}>{etiquetaLabel}</span>}
                     <img src={dish.imagen || 'https://via.placeholder.com/600/222/FFF?text=Plato'} alt={dish.nombre} loading="lazy" />
                     <div className="dish-zoom-hint">

@@ -51,7 +51,7 @@ export default function ContactoSection({ subtitle, config }: { subtitle: any, c
             <input type="email" name="correo" placeholder="Correo electrónico" required />
             <input type="tel" name="telefono" placeholder="Teléfono (opcional)" />
             <textarea name="mensaje" placeholder="Tu mensaje" required></textarea>
-            <button type="submit" className="btn btn-primary btn-large">Enviar Mensaje</button>
+            <button type="submit" className="btn btn-primary contacto-submit-btn">Enviar Mensaje</button>
             <p className="form-message" id="msgContacto"></p>
           </form>
         </div>

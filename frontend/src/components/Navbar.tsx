@@ -23,7 +23,7 @@ export default function Navbar({ navData, config, buttons }: { navData: any, con
       setScrollProgress(progress);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Init
     return () => window.removeEventListener('scroll', handleScroll);
   }, [config]);
@@ -35,14 +35,30 @@ export default function Navbar({ navData, config, buttons }: { navData: any, con
     } else {
       document.body.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [mobileMenuOpen]);
+
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    if (mobileMenuOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  const closeMenu = () => setMobileMenuOpen(false);
 
   return (
     <>
       <div className="scroll-progress" id="scrollProgress" style={{ width: `${scrollProgress}%` }}></div>
       <nav id="navbar" className={`navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
-          <a href="#home" className="logo" onClick={() => setMobileMenuOpen(false)}>
+          <a href="#home" className="logo" onClick={closeMenu}>
             {config?.logo_nav ? (
               <img src={config.logo_nav} alt="Sazón Córdoba" className="brand-logo loaded" />
             ) : (
@@ -50,13 +66,13 @@ export default function Navbar({ navData, config, buttons }: { navData: any, con
             )}
           </a>
           
-          <div className={`nav-menu-wrapper ${mobileMenuOpen ? 'open' : ''}`}>
+          {/* Desktop Navigation */}
+          <div className="nav-menu-wrapper">
             <ul className="nav-links" id="nav-links">
               {navData?.map((item: any) => (
                 <li key={item.id}>
                   <a 
                     href={resolveSiteUrl(item.enlace)}
-                    onClick={() => setMobileMenuOpen(false)}
                     style={{ color: item.color || '#ffffff' }}
                   >
                     {item.etiqueta}
@@ -70,7 +86,6 @@ export default function Navbar({ navData, config, buttons }: { navData: any, con
                 <a 
                   key={btn.id} 
                   href={resolveSiteUrl(btn.enlace)}
-                  onClick={() => setMobileMenuOpen(false)}
                   className="nav-btn" 
                   style={{ background: btn.color_fondo, color: btn.color_texto, borderColor: btn.color_borde || 'transparent' }}
                 >
@@ -80,19 +95,75 @@ export default function Navbar({ navData, config, buttons }: { navData: any, con
             </div>
           </div>
           
+          {/* Mobile hamburger button */}
           <button 
             className="mobile-menu-btn" 
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <i className={`ph ${mobileMenuOpen ? 'ph-x' : 'ph-list'}`}></i>
           </button>
         </div>
-
-        {mobileMenuOpen && (
-          <div className="mobile-overlay" onClick={() => setMobileMenuOpen(false)}></div>
-        )}
       </nav>
+
+      {/* Mobile Drawer & Overlay rendered outside <nav> to prevent backdrop-filter clipping or horizontal overflow */}
+      <div 
+        className={`mobile-overlay ${mobileMenuOpen ? 'open' : ''}`} 
+        onClick={closeMenu}
+        aria-hidden={!mobileMenuOpen}
+      ></div>
+
+      <div 
+        className={`mobile-nav-drawer ${mobileMenuOpen ? 'open' : ''}`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        <div className="mobile-drawer-header">
+          <div className="mobile-drawer-brand">
+            {config?.logo_nav ? (
+              <img src={config.logo_nav} alt="Sazón Córdoba" />
+            ) : (
+              <span>Sazón <span className="logo-accent">Córdoba</span></span>
+            )}
+          </div>
+          <button 
+            className="mobile-drawer-close" 
+            onClick={closeMenu}
+            aria-label="Cerrar menú"
+          >
+            <i className="ph ph-x"></i>
+          </button>
+        </div>
+
+        <ul className="mobile-drawer-links">
+          {navData?.map((item: any) => (
+            <li key={`mob-${item.id}`}>
+              <a 
+                href={resolveSiteUrl(item.enlace)}
+                onClick={closeMenu}
+              >
+                {item.etiqueta}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {buttons && buttons.length > 0 && (
+          <div className="mobile-drawer-actions">
+            {buttons.map((btn: any) => (
+              <a 
+                key={`mob-btn-${btn.id}`} 
+                href={resolveSiteUrl(btn.enlace)}
+                onClick={closeMenu}
+                className="nav-btn" 
+                style={{ background: btn.color_fondo, color: btn.color_texto, borderColor: btn.color_borde || 'transparent' }}
+              >
+                {btn.texto}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }

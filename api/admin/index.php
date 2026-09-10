@@ -849,26 +849,329 @@ $groups = [
         .swal2-confirm { background: linear-gradient(135deg, #ff6b00, #ffb703) !important; border-radius: 50px !important; font-family: 'Outfit', sans-serif !important; font-weight: 600 !important; }
         .swal2-cancel { border-radius: 50px !important; font-family: 'Outfit', sans-serif !important; font-weight: 600 !important; }
 
-        /* RESPONSIVE */
+        /* DESKTOP DEFAULTS FOR TOGGLE & BACKDROP */
+        .mobile-menu-toggle { display: none; }
+        .sidebar-close-btn { display: none; }
+        .sidebar-backdrop { display: none; }
+        .header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+
+        /* RESPONSIVE DESIGN (MOBILE & TABLETS) */
         @media (max-width: 900px) {
-            .sidebar { width: 60px; }
-            .sidebar-brand h2, .sidebar-brand span, .nav-label, .nav-item span, .count-badge, .sidebar-footer a span { display: none; }
-            .sidebar-brand { justify-content: center; padding: 16px; }
-            .sidebar-brand img { width: 30px; height: 30px; }
-            .nav-item { justify-content: center; padding: 12px; }
-            .main { margin-left: 60px; padding: 16px; max-width: calc(100vw - 60px); }
-            table { font-size: 0.8rem; }
-            th, td { padding: 8px 10px; }
+            /* Mobile toggle button */
+            .mobile-menu-toggle {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                border: 1px solid #e9ecef;
+                background: #ffffff;
+                color: #1a1a1a;
+                font-size: 1.45rem;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                transition: all 0.2s ease;
+                flex-shrink: 0;
+            }
+            .mobile-menu-toggle:hover,
+            .mobile-menu-toggle:active {
+                background: rgba(255, 107, 0, 0.08);
+                color: #ff6b00;
+                border-color: rgba(255, 107, 0, 0.3);
+            }
+
+            /* Botón cerrar en sidebar */
+            .sidebar-close-btn {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                border: 1px solid #e9ecef;
+                background: #f8f9fa;
+                color: #5a6066;
+                font-size: 1.25rem;
+                cursor: pointer;
+                margin-left: auto;
+                transition: all 0.2s;
+            }
+            .sidebar-close-btn:hover {
+                background: #e9ecef;
+                color: #1a1a1a;
+            }
+
+            /* Backdrop / Overlay */
+            .sidebar-backdrop {
+                display: block !important;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                z-index: 9998;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+            .sidebar-backdrop.active {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            /* Sidebar móvil deslizante */
+            .sidebar {
+                width: min(310px, 86vw) !important;
+                position: fixed !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                height: 100% !important;
+                height: 100svh !important;
+                z-index: 9999 !important;
+                transform: translateX(-100%) !important;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                box-shadow: none !important;
+                border-right: 1px solid #e9ecef !important;
+                background: #ffffff !important;
+            }
+            .sidebar.open {
+                transform: translateX(0) !important;
+                box-shadow: 10px 0 35px rgba(0, 0, 0, 0.25) !important;
+            }
+
+            /* VISIBILIDAD DE LETRAS Y ELEMENTOS EN EL MENÚ MÓVIL */
+            .sidebar-brand h2,
+            .sidebar-brand span,
+            .nav-label,
+            .nav-item span,
+            .count-badge,
+            .sidebar-footer a span {
+                display: inline-block !important;
+            }
+
+            .sidebar-brand {
+                padding: 18px 16px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                gap: 12px !important;
+            }
+            .sidebar-brand img {
+                width: 36px !important;
+                height: 36px !important;
+                border-radius: 8px !important;
+            }
+            .sidebar-brand h2 {
+                font-size: 1.15rem !important;
+                font-weight: 700 !important;
+                color: #1a1a1a !important;
+            }
+
+            .sidebar-nav {
+                padding: 12px 10px !important;
+            }
+            .sidebar-nav .nav-label {
+                font-size: 0.72rem !important;
+                color: #8c959d !important;
+                padding: 8px 12px 6px !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.8px !important;
+            }
+
+            .nav-item {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                padding: 11px 14px !important;
+                margin-bottom: 3px !important;
+                font-size: 0.92rem !important;
+                font-weight: 600 !important;
+                color: #333a42 !important;
+                border-radius: 12px !important;
+                text-decoration: none !important;
+            }
+            .nav-item:hover {
+                background: #f8f9fa !important;
+                color: #1a1a1a !important;
+            }
+            .nav-item.active {
+                background: rgba(255, 107, 0, 0.12) !important;
+                color: #ff6b00 !important;
+            }
+            .nav-item i {
+                font-size: 1.3rem !important;
+                flex-shrink: 0 !important;
+            }
+            .nav-item .count-badge {
+                margin-left: auto !important;
+                background: #e9ecef !important;
+                color: #495057 !important;
+                padding: 2px 9px !important;
+                border-radius: 50px !important;
+                font-size: 0.74rem !important;
+                font-weight: 700 !important;
+            }
+            .nav-item.active .count-badge {
+                background: rgba(255, 107, 0, 0.22) !important;
+                color: #ff6b00 !important;
+            }
+
+            .sidebar-footer {
+                padding: 14px 10px !important;
+            }
+            .sidebar-footer a {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                gap: 10px !important;
+                padding: 11px 14px !important;
+                font-size: 0.9rem !important;
+                font-weight: 600 !important;
+                color: #5a6066 !important;
+                border-radius: 10px !important;
+            }
+            .sidebar-footer a:hover {
+                background: #f8f9fa !important;
+                color: #1a1a1a !important;
+            }
+
+            /* CONTENIDO PRINCIPAL EN MÓVIL */
+            .main {
+                margin-left: 0 !important;
+                padding: 16px 12px 36px 12px !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+                box-sizing: border-box !important;
+            }
+
+            .main-header {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+                margin-bottom: 16px !important;
+            }
+            .header-left {
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+            }
+            .main-header h1 {
+                font-size: 1.25rem !important;
+                line-height: 1.2 !important;
+                margin: 0 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+            .main-header h1 span {
+                font-size: 0.85rem !important;
+            }
+            .header-actions {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                flex-shrink: 0 !important;
+            }
+            .btn {
+                padding: 8px 14px !important;
+                font-size: 0.82rem !important;
+            }
+            #btnAdd {
+                white-space: nowrap !important;
+            }
+
+            /* TABS DESPLAZABLES HORIZONTALMENTE */
+            .tab-bar {
+                display: flex !important;
+                overflow-x: auto !important;
+                flex-wrap: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                gap: 6px !important;
+                margin-bottom: 16px !important;
+                padding-bottom: 4px !important;
+                scrollbar-width: none !important;
+            }
+            .tab-bar::-webkit-scrollbar {
+                display: none !important;
+            }
+            .tab-btn {
+                white-space: nowrap !important;
+                flex-shrink: 0 !important;
+                padding: 8px 14px !important;
+                font-size: 0.85rem !important;
+                border-bottom-width: 2px !important;
+            }
+
+            /* TARJETAS Y TABLAS RESPONSIVAS */
+            .section-card {
+                border-radius: 14px !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            table {
+                min-width: 500px !important;
+                font-size: 0.82rem !important;
+            }
+            th, td {
+                padding: 10px 12px !important;
+            }
+            td.actions {
+                white-space: nowrap !important;
+                width: auto !important;
+            }
+            td.actions .btn {
+                padding: 5px 10px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* MODAL EN MÓVIL */
+            .modal {
+                width: 94% !important;
+                max-width: 480px !important;
+                padding: 22px 18px !important;
+                border-radius: 18px !important;
+                max-height: 88vh !important;
+            }
+            .modal h3 {
+                font-size: 1.15rem !important;
+                margin-bottom: 16px !important;
+            }
+            .form-row {
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            .modal .btn-row {
+                flex-direction: row !important;
+                gap: 10px !important;
+                margin-top: 18px !important;
+            }
         }
     </style>
 </head>
 <body>
 
+<!-- SIDEBAR BACKDROP -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
         <img src="../../img/logos/logosason.jpg" alt="Sazón Córdoba">
         <h2>Sazón Córdoba</h2>
+        <button class="sidebar-close-btn" id="btnCloseSidebar" aria-label="Cerrar menú" onclick="closeSidebar()">
+            <i class="ph ph-x"></i>
+        </button>
     </div>
     <nav class="sidebar-nav">
         <div class="nav-label">Contenido</div>
@@ -894,9 +1197,16 @@ $groups = [
 <!-- MAIN -->
 <main class="main">
     <div class="main-header">
-        <h1 id="pageTitle">Hero Slides <span id="pageCount"></span></h1>
-        <a class="btn btn-ghost" id="btnExport" href="#" style="display:none;">Exportar CSV</a>
-        <button class="btn btn-primary" id="btnAdd" onclick="openModal(currentSection,'add')">+ Agregar</button>
+        <div class="header-left">
+            <button class="mobile-menu-toggle" id="btnToggleSidebar" aria-label="Abrir menú" onclick="toggleSidebar()">
+                <i class="ph ph-list"></i>
+            </button>
+            <h1 id="pageTitle">Hero Slides <span id="pageCount"></span></h1>
+        </div>
+        <div class="header-actions">
+            <a class="btn btn-ghost" id="btnExport" href="#" style="display:none;">Exportar CSV</a>
+            <button class="btn btn-primary" id="btnAdd" onclick="openModal(currentSection,'add')">+ Agregar</button>
+        </div>
     </div>
 
     <div class="tab-bar" id="tabBar"></div>
@@ -1233,12 +1543,41 @@ let currentSection = 'nav';
 let currentGroup = 'nav';
 let currentMode = '';
 
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
+
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 function showGroup(group) {
     currentGroup = group;
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.querySelector(`.nav-item[data-group="${group}"]`).classList.add('active');
+    const targetItem = document.querySelector(`.nav-item[data-group="${group}"]`);
+    if (targetItem) targetItem.classList.add('active');
     renderTabs(group);
     showSection(groups[group].children[0]);
+    if (window.innerWidth <= 900) {
+        closeSidebar();
+    }
 }
 
 function renderTabs(group) {
@@ -1574,6 +1913,19 @@ function showLoader() { document.getElementById('globalLoader').style.display = 
 function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 900) {
+        closeSidebar();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSidebar();
+        closeModal();
+    }
+});
 
 showGroup('nav');
 </script>

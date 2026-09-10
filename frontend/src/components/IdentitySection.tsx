@@ -17,7 +17,7 @@ export default function IdentitySection({ data, subtitle }: { data: any, subtitl
           data-aos="fade-up" 
           data-aos-delay="100" 
           id="identity-desc"
-          style={{ maxWidth: '800px', margin: '0 auto 40px auto', fontSize: '1.2rem', color: s.color || '' }} 
+          style={{ maxWidth: '800px', margin: '0 auto 40px auto', color: s.color || '' }} 
           dangerouslySetInnerHTML={{ __html: s.descripcion?.replace(/\n/g, '<br>') || '' }}
         ></div>
         <div 
@@ -25,13 +25,12 @@ export default function IdentitySection({ data, subtitle }: { data: any, subtitl
           data-aos="zoom-in" 
           data-aos-delay="200" 
           id="identity-badges"
-          style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px' }}
         >
           {data.badges?.map((b: any) => (
             <div 
               key={b.id} 
-              className="badge" 
-              style={{ fontSize: '1rem', padding: '10px 20px', color: b.color || '#ff6b00', background: b.color_fondo || 'rgba(255, 107, 0, 0.15)' }}
+              className="badge identity-badge" 
+              style={{ color: b.color || '#ff6b00', background: b.color_fondo || 'rgba(255, 107, 0, 0.15)' }}
             >
               {b.texto}
             </div>

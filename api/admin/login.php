@@ -109,6 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .back-link:hover { color: #ff6b00; }
         .error { display: none; }
 
+        @media (max-width: 480px) {
+            body { padding: 16px; }
+            .login-card { padding: 32px 20px; border-radius: 20px; }
+        }
+
         /* LOADER */
         .loader-overlay {
             position: fixed; inset: 0;

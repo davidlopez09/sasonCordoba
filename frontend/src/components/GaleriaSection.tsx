@@ -63,10 +63,10 @@ export default function GaleriaSection({ data, subtitle, config }: { data: any[]
         </button>
         <div className="lightbox-content">
           {activeImage && (
-            <div className="dish-detail" style={{ maxWidth: '800px', padding: '20px', textAlign: 'center', background: 'transparent' }}>
-                <img src={activeImage.url} alt={activeImage.titulo} style={{ maxHeight: '80vh', objectFit: 'contain' }} />
-                {activeImage.titulo && <h2 style={{ color: '#fff', marginTop: '1rem' }}>{activeImage.titulo}</h2>}
-                {activeImage.edicion && <p style={{ color: '#aaa' }}>{activeImage.edicion}</p>}
+            <div className="dish-detail" style={{ maxWidth: '800px', padding: '18px 20px', textAlign: 'center', background: '#ffffff', borderRadius: '20px' }}>
+                <img src={activeImage.url} alt={activeImage.titulo} style={{ maxHeight: '65vh', width: '100%', objectFit: 'contain', borderRadius: '12px' }} />
+                {activeImage.titulo && <h2 style={{ color: '#111827', marginTop: '0.85rem', marginBottom: '0.25rem', fontSize: '1.2rem', fontWeight: 800 }}>{activeImage.titulo}</h2>}
+                {activeImage.edicion && <p style={{ color: '#4b5563', margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>{activeImage.edicion}</p>}
             </div>
           )}
         </div>
