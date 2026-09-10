@@ -6,6 +6,7 @@ import AboutSection from "@/components/AboutSection";
 import ExponentesSection from "@/components/ExponentesSection";
 import GaleriaSection from "@/components/GaleriaSection";
 import ItinerarySection from "@/components/ItinerarySection";
+import AgendaDownloadSection from "@/components/AgendaDownloadSection";
 import ParticipaSection from "@/components/ParticipaSection";
 import DirectorioSection from "@/components/DirectorioSection";
 import CountdownSection from "@/components/CountdownSection";
@@ -52,6 +53,8 @@ export default async function Home() {
       )}
       
       {config.mostrar_itinerario !== '0' && <ItinerarySection data={data.itinerario} subtitle={data.subtitulos?.itinerario} />}
+      
+      <AgendaDownloadSection />
 
       {config.mostrar_galeria !== '0' && <GaleriaSection data={data.galeria} subtitle={data.subtitulos?.galeria} config={config} />}
       

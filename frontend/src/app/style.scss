@@ -133,10 +133,6 @@ img {
     padding: 100px 0;
 }
 
-.section-dark {
-    background-color: var(--bg-darker);
-}
-
 .section-title {
     font-size: 3rem;
     margin-bottom: 20px;
@@ -1034,6 +1030,133 @@ img {
 
 .timeline-desc {
     color: var(--text-muted);
+}
+
+/* =========================================
+   AGENDA DOWNLOAD SECTION
+   ========================================= */
+.agenda-section {
+    padding: 70px 0;
+}
+
+.agenda-banner {
+    position: relative;
+    // background: linear-gradient(135deg, #ffffff 0%, #fffaf5 50%, #fff4ea 100%);
+    // border: 1px solid rgba(255, 107, 0, 0.22);
+    border-radius: 28px;
+    padding: 48px 44px;
+    // box-shadow: 0 16px 45px rgba(255, 107, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    overflow: hidden;
+}
+
+
+.agenda-icon-wrap {
+    flex-shrink: 0;
+}
+
+.agenda-icon-box {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ff6b00, #ffb703);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.2rem;
+    box-shadow: 0 12px 30px rgba(255, 107, 0, 0.35);
+    transition: var(--transition);
+}
+
+.agenda-banner:hover .agenda-icon-box {
+    transform: scale(1.06) rotate(-3deg);
+}
+
+.agenda-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.agenda-badge {
+    margin-bottom: 12px;
+}
+
+.agenda-title {
+    font-size: 2.1rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.agenda-desc {
+    font-size: 1.02rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+    max-width: 680px;
+}
+
+.agenda-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-bottom: 28px;
+}
+
+.agenda-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-main);
+
+    i {
+        color: #2ecc71;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+}
+
+.agenda-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+.agenda-btn-download {
+    padding: 13px 28px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    box-shadow: 0 6px 20px rgba(255, 107, 0, 0.3);
+}
+
+.agenda-btn-preview {
+    padding: 13px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    border-color: rgba(0, 0, 0, 0.15);
+    background: #ffffff;
+}
+
+.agenda-btn-preview:hover {
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 /* =========================================
@@ -2874,6 +2997,82 @@ img {
         width: calc(100% - 42px) !important;
     }
 
+    /* Agenda Download Section Mobile */
+    .agenda-section {
+        padding: 40px 0 !important;
+    }
+
+    .agenda-banner {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        padding: 32px 18px !important;
+        gap: 20px !important;
+        border-radius: 22px !important;
+        max-width: 380px !important;
+        margin: 0 auto !important;
+    }
+
+    .agenda-icon-box {
+        width: 74px !important;
+        height: 74px !important;
+        border-radius: 18px !important;
+        font-size: 2.3rem !important;
+    }
+
+    .agenda-title {
+        font-size: 1.45rem !important;
+        line-height: 1.25 !important;
+        margin-bottom: 10px !important;
+    }
+
+    .agenda-desc {
+        font-size: 0.88rem !important;
+        line-height: 1.5 !important;
+        margin-bottom: 18px !important;
+    }
+
+    .agenda-features {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        max-width: 290px !important;
+        margin: 0 auto 22px auto !important;
+        gap: 10px !important;
+    }
+
+    .agenda-feature-item {
+        font-size: 0.84rem !important;
+        text-align: left !important;
+    }
+
+    .agenda-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 auto !important;
+    }
+
+    .agenda-btn-download {
+        flex: 1 1 60% !important;
+        padding: 11px 12px !important;
+        font-size: 0.82rem !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+    }
+
+    .agenda-btn-preview {
+        flex: 1 1 40% !important;
+        padding: 11px 12px !important;
+        font-size: 0.82rem !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+    }
+
     /* Participa: BOTONES UNO AL LADO DEL OTRO Y MÁS PEQUEÑOS */
     .participa-content {
         text-align: center !important;
@@ -3180,6 +3379,20 @@ img {
     .identity-badge {
         font-size: 0.72rem !important;
         padding: 6px 10px !important;
+    }
+
+    .agenda-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    .agenda-btn-download,
+    .agenda-btn-preview {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        padding: 11px 14px !important;
+        font-size: 0.82rem !important;
     }
 }
 
