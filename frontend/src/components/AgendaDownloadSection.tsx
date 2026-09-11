@@ -1,5 +1,6 @@
 "use client";
 
+import { resolveSiteUrl } from '@/lib/api';
 export default function AgendaDownloadSection() {
   return (
     <section id="agenda" className="section agenda-section">
@@ -31,7 +32,7 @@ export default function AgendaDownloadSection() {
 
             <div className="agenda-actions">
               <a 
-                href="/agenda_sc_2026.pdf" 
+                href={resolveSiteUrl("/agenda_sc_2026.pdf")} 
                 download="Agenda_Sazon_Cordoba_2026.pdf" 
                 className="btn btn-primary agenda-btn-download"
                 id="btnDescargarAgenda"
@@ -40,7 +41,7 @@ export default function AgendaDownloadSection() {
                 <span>Descargar Agenda (PDF)</span>
               </a>
               <a 
-                href="/agenda_sc_2026.pdf" 
+                href={resolveSiteUrl("/agenda_sc_2026.pdf")} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn btn-outline agenda-btn-preview"
