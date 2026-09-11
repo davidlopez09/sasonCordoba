@@ -33,6 +33,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [windowWidth, setWindowWidth] = useState(1200);
+  const [isMounted, setIsMounted] = useState(false);
 
   const list = (platillos && platillos.length > 0) ? platillos : [];
   const N = list.length || 1;
@@ -46,6 +47,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
   }, [N]);
 
   useEffect(() => {
+    setIsMounted(true);
     const handleResize = () => {
       if (wrapperRef.current) {
         setWrapperWidth(wrapperRef.current.clientWidth);
@@ -106,7 +108,7 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
     if (distance < -minSwipeDistance) prevSlide();
   };
 
-  const currentWrapperWidth = wrapperWidth > 0 ? wrapperWidth : (typeof window !== 'undefined' ? window.innerWidth : 360);
+  const currentWrapperWidth = isMounted ? (wrapperWidth > 0 ? wrapperWidth : window.innerWidth) : 360;
   const cardWidth = windowWidth <= 380 ? 260 : (isMobile ? 280 : 360);
   const cardGap = isMobile ? 18 : 30;
   const step = cardWidth + cardGap;
@@ -163,7 +165,8 @@ export default function ExponentesSection({ exponentes, platillos, subtitle, sub
               id="dishes-slider-track" 
               style={{ 
                 transform: `translateX(${translateX}px)`,
-                gap: `${cardGap}px`
+                columnGap: `${cardGap}px`,
+                rowGap: `${cardGap}px`
               }}
             >
               {itemsList.map((dish: any, idx: number) => {
